@@ -24,11 +24,12 @@
     "npm": ">= 3.0.0"
   },
   "scripts": {
-    "test": "npm run lint && npm run compile && npm run jest",
+    "test": "npm run lint && npm run compile && npm run clean && npm run jest",
     "lint": "eslint src/. test/. --config .eslintrc.json --ext .ts --fix",
     "dev": "ts-node-dev --no-notify src/",
-    "start": "npm run compile && node lib/",
-    "jest": "jest  --forceExit",
+    "start-": "npm run compile && NODE_ENV=production node lib/",
+    "clean": "shx rm -rf test/data/",
+    "jest": "NODE_ENV=test jest --forceExit",
     "compile": "shx rm -rf lib/ && tsc"
   },
   "standard": {
