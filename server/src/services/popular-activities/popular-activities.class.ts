@@ -1,11 +1,9 @@
-import { Id, NullableId, Paginated, Params, ServiceMethods } from '@feathersjs/feathers';
+import { Paginated, Params, ServiceMethods } from '@feathersjs/feathers';
 import { Application } from '../../declarations';
-
-interface Data {}
 
 interface ServiceOptions {}
 
-export class PopularActivities implements ServiceMethods<Data> {
+export class PopularActivities implements Partial<ServiceMethods<any>> {
   app: Application;
   options: ServiceOptions;
 
@@ -15,7 +13,7 @@ export class PopularActivities implements ServiceMethods<Data> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async find (params?: Params): Promise<Data[] | Paginated<Data>> {
+  async find (params?: Params): Promise<any[] | Paginated<any>> {
     return [];
   }
 }

@@ -1,4 +1,7 @@
+import { discard, validate } from 'feathers-hooks-common';
 import * as authentication from '@feathersjs/authentication';
+import { Hook } from '@feathersjs/feathers';
+import { createValidator } from './validator';
 import setTimestamp from '../../hooks/set-timestamp';
 // Don't remove this comment. It's needed to format import lines nicely.
 
@@ -9,14 +12,21 @@ export default {
     all: [ authenticate('jwt') ],
     find: [],
     get: [],
-    create: [setTimestamp('createdAt')],
+    create: [
+      // (
+      // (validate(createValidator) as unknown) as Hook,
+      validate(createValidator) as Hook,
+      setTimestamp('createdAt')
+    ],
     update: [setTimestamp('updateddAt')],
     patch: [setTimestamp('updateddAt')],
     remove: []
   },
 
   after: {
-    all: [],
+    all: [
+      (discard('userId', 'createdAt', 'updatedAt') as unknown) as Hook
+    ],
     find: [],
     get: [],
     create: [],

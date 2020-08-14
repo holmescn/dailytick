@@ -5,7 +5,7 @@ import { Application } from '../declarations';
 export default function (app: Application): NeDB<any>  {
   const dbPath = app.get('nedb');
   const Model = new NeDB({
-    filename: path.join(dbPath, 'ticks.db'),
+    filename: dbPath ? path.join(dbPath, 'ticks.db') : '',
     autoload: true
   });
 
