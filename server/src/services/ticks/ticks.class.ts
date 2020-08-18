@@ -4,10 +4,10 @@ import { Application } from '../../declarations';
 
 // A type interface for a tick (it does not validate any data)
 interface TickData {
-  _id?: string;
+  _id: string;
   tickTime: number;
   activity: string;
-  tags?: string[];
+  tags: string[];
 }
 
 export class Ticks extends Service<TickData> {
@@ -20,8 +20,10 @@ export class Ticks extends Service<TickData> {
     const tickData = {
       ...data,
       userId: params.user._id,
-      tags: []
     };
+
+    // Add empty tags if no given.
+    tickData.tags = tickData.tags || [];
 
     // Call the original `create` method with existing `params` and new data
     return super.create(tickData, params);

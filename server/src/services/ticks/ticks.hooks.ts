@@ -25,7 +25,7 @@ export default {
 
   after: {
     all: [
-      (discard('userId', 'createdAt', 'updatedAt') as unknown) as Hook
+      discard('userId', 'createdAt', 'updatedAt') as Hook
     ],
     find: [],
     get: [],
