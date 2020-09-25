@@ -1,0 +1,58 @@
+<ion-header class="ion-padding">
+  <ion-toolbar>
+    <ion-input
+      type="text"
+      [autofocus]="true"
+      debounce="200"
+      enterkeyhint="done"
+      placeholder="描述 #标签 #标签"></ion-input>
+    <ion-buttons slot="primary">
+      <ion-button (click)="onOk($event)">OK</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-list>
+    <ion-item-group>
+      <ion-item-divider>
+        <ion-label>最近的活动</ion-label>
+      </ion-item-divider>
+      <ion-item>
+        <ion-label>Angola</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>Argentina</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>Armenia</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>Armenia</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>Armenia</ion-label>
+      </ion-item>
+    </ion-item-group>
+    <ion-item-group>
+      <ion-item-divider>
+        <ion-label>经常活动</ion-label>
+      </ion-item-divider>
+      <ion-item>
+        <ion-label>Angola</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>Argentina</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>Armenia</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>Armenia</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>Armenia</ion-label>
+      </ion-item>
+    </ion-item-group>
+  </ion-list>
+</ion-content>

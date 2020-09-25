@@ -5,6 +5,14 @@ const routes: Routes = [
   {
     path: '',
     loadChildren: () => import('./tabs/tabs.module').then(m => m.TabsPageModule)
+  },
+  {
+    path: 'edit',
+    loadChildren: () => import('./edit/edit.module').then( m => m.EditPageModule)
+  },
+  {
+    path: 'full-edit',
+    loadChildren: () => import('./full-edit/full-edit.module').then( m => m.FullEditPageModule)
   }
 ];
 @NgModule({
