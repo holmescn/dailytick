@@ -2,21 +2,15 @@ import { Params } from '@feathersjs/feathers';
 import { Service, NedbServiceOptions } from 'feathers-nedb';
 import { Application } from '../../declarations';
 
-// A type interface for a tick (it does not validate any data)
-interface TickData {
-  _id: string;
-  tickTime: number;
-  activity: string;
-  tags: string[];
-}
 
-export class Ticks extends Service<TickData> {
+export class Ticks extends Service {
   //eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(options: Partial<NedbServiceOptions>, app: Application) {
     super(options);
   }
 
-  create (data: Partial<TickData>, params: Params): Promise<TickData | TickData[]> {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  create (data: any, params: Params): Promise<any> {
     const tickData = {
       ...data,
       userId: params.user._id,

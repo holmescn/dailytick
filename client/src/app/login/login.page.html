@@ -1,0 +1,19 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title class="ion-text-center">登录</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-list>
+    <ion-item>
+      <ion-label position="stacked">帐号</ion-label>
+      <ion-input #email name="email" placeholder="请在这里输入帐号"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">密码</ion-label>
+      <ion-input #password name="password" placeholder="请在这里输入密码"></ion-input>
+    </ion-item>
+  </ion-list>
+  <ion-button expand="block" (click)="login(email.value, password.value)">登录</ion-button>
+</ion-content>
