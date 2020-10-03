@@ -13,13 +13,11 @@ export default {
     find: [],
     get: [],
     create: [
-      // (
-      // (validate(createValidator) as unknown) as Hook,
       validate(createValidator) as Hook,
       setTimestamp('createdAt')
     ],
-    update: [setTimestamp('updateddAt')],
-    patch: [setTimestamp('updateddAt')],
+    update: [setTimestamp('updatedAt')],
+    patch: [setTimestamp('updatedAt')],
     remove: []
   },
 

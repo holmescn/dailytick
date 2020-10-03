@@ -1,26 +1,28 @@
-// Initializes the `popular-activities` service on path `/popular-activities`
+// Initializes the `activities` service on path `/activities`
 import { ServiceAddons } from '@feathersjs/feathers';
 import { Application } from '../../declarations';
-import { PopularActivities } from './popular-activities.class';
-import hooks from './popular-activities.hooks';
+import { Activities } from './activities.class';
+import createModel from '../../models/activities.model';
+import hooks from './activities.hooks';
 
 // Add this service to the service type index
 declare module '../../declarations' {
   interface ServiceTypes {
-    'popular-activities': PopularActivities & ServiceAddons<any>;
+    'activities': Activities & ServiceAddons<any>;
   }
 }
 
 export default function (app: Application): void {
   const options = {
+    Model: createModel(app),
     paginate: app.get('paginate')
   };
 
   // Initialize our service with any options it requires
-  app.use('/popular-activities', new PopularActivities(options, app));
+  app.use('/activities', new Activities(options, app));
 
   // Get our initialized service so that we can register hooks
-  const service = app.service('popular-activities');
+  const service = app.service('activities');
 
   service.hooks(hooks);
 }

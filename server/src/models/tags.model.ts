@@ -2,14 +2,14 @@ import NeDB from 'nedb';
 import path from 'path';
 import { Application } from '../declarations';
 
-export default function (app: Application): NeDB<any> {
+export default function (app: Application): NeDB<any>  {
   const dbPath = app.get('nedb');
   const Model = new NeDB({
-    filename: dbPath ? path.join(dbPath, 'users.db') : '',
+    filename: path.join(dbPath, 'tags.db'),
     autoload: true
   });
 
-  Model.ensureIndex({ fieldName: 'email', unique: true, sparse: true });
+  Model.ensureIndex({ fieldName: 'text', unique: true });
 
   return Model;
 }

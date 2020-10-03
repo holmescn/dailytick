@@ -68,10 +68,10 @@
     "@typescript-eslint/eslint-plugin": "^3.10.1",
     "@typescript-eslint/parser": "^3.10.1",
     "axios": "^0.19.2",
-    "eslint": "^7.9.0",
+    "eslint": "^7.10.0",
     "jest": "^26.4.2",
     "shx": "^0.3.2",
-    "ts-jest": "^26.4.0",
+    "ts-jest": "^26.4.1",
     "ts-node-dev": "^1.0.0-pre.63",
     "typescript": "^3.9.7"
   }

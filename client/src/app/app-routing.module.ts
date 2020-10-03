@@ -14,13 +14,12 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
-    path: 'full-edit',
-    loadChildren: () => import('./full-edit/full-edit.module').then( m => m.FullEditPageModule),
-    canActivate: [AuthGuard]
-  },
-  {
     path: 'login',
     loadChildren: () => import('./login/login.module').then( m => m.LoginPageModule)
+  },
+  {
+    path: 'activity',
+    loadChildren: () => import('./activity/activity.module').then( m => m.ActivityPageModule)
   }
 ];
 @NgModule({

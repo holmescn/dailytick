@@ -3,7 +3,6 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TabRecordPage } from './tab_record.page';
-import { ExploreContainerComponentModule } from '../explore-container/explore-container.module';
 
 import { TabRecordPageRoutingModule } from './tab_record-routing.module';
 
@@ -12,7 +11,6 @@ import { TabRecordPageRoutingModule } from './tab_record-routing.module';
     IonicModule,
     CommonModule,
     FormsModule,
-    ExploreContainerComponentModule,
     TabRecordPageRoutingModule
   ],
   declarations: [TabRecordPage]

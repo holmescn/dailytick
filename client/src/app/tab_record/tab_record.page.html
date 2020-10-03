@@ -1,11 +1,9 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>10:10</ion-title>
+    <ion-title>{{ title }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="newTick($event)">
-        <ion-icon
-          slot="icon-only"
-          name="add-outline"></ion-icon>
+        <ion-icon slot="icon-only" name="add-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -21,37 +19,39 @@
   </ion-refresher>
   <ion-virtual-scroll [items]="ticks"
                       [headerFn]="headerFn"
+                      [trackBy]="trackByFn"
                       approxItemHeight="55px">
     <ion-item-divider *virtualHeader="let header">
       {{ header }}
     </ion-item-divider>
     <ion-item-sliding *virtualItem="let item">
       <ion-item>
-        <ion-label>
+        <ion-label (click)="editActivity(item)">
           <h2 class="ion-text-wrap">{{ item.activity }}</h2>
           <!-- h3>{{ item._time }} {{ item._duration }}</h3 -->
-          <p>{{ item.tags.join("&nbsp;") }}</p>
+          <p>#{{ item.tags.join("&nbsp; #") }}</p>
         </ion-label>
-        <ion-note slot="start" (click)="editStartTime(tick)">
+        <ion-note slot="start" (click)="editTickTime(item)">
           <div>{{ item._duration }}</div>
           <div>{{ item._time }}</div>
         </ion-note>
       </ion-item>
       <ion-item-options side="end">
-        <ion-item-option color="primary">编辑</ion-item-option>
-        <ion-item-option color="secondary">插入</ion-item-option>
-        <ion-item-option color="danger">删除</ion-item-option>
+        <ion-item-option (click)="newTick($event, item)">插入</ion-item-option>
+        <ion-item-option color="danger" (click)="removeTick($event, item)">删除</ion-item-option>
       </ion-item-options>
     </ion-item-sliding>
   </ion-virtual-scroll>
-  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadData($event)">
+  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMore($event)">
     <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more data...">
     </ion-infinite-scroll-content>
   </ion-infinite-scroll>
   <ion-datetime
-    *ngIf="editingStartTime"
-    displayFormat="MMMM"
-    value="2012-12-15T13:47:20.789"
-    (ionCancel)="editingStartTime = false"
-    (ionChange)="changeStartTime($event)"></ion-datetime>
+    *ngIf="isEditingTickTime"
+    [pickerFormat]="pickerFormat"
+    [max]="editingMaxTickTime"
+    [min]="editingMinTickTime"
+    [value]="editingTickTime"
+    (ionCancel)="isEditingTickTime = false"
+    (ionChange)="changeTickTime($event)"></ion-datetime>
 </ion-content>

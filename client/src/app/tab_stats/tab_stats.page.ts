@@ -6,7 +6,11 @@ import { Component } from '@angular/core';
   styleUrls: ['tab_stats.page.scss']
 })
 export class TabStatsPage {
+  segment: string = "today";
 
   constructor() {}
 
+  segmentChanged(event) {
+    this.segment = event.detail.value;
+  }
 }

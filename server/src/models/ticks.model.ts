@@ -9,5 +9,7 @@ export default function (app: Application): NeDB<any>  {
     autoload: true
   });
 
+  Model.ensureIndex({ fieldName: 'tickTime', unique: false });
+
   return Model;
 }

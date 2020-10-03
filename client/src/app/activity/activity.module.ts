@@ -4,17 +4,17 @@ import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
-import { FullEditPageRoutingModule } from './full-edit-routing.module';
+import { ActivityPageRoutingModule } from './activity-routing.module';
 
-import { FullEditPage } from './full-edit.page';
+import { ActivityPage } from './activity.page';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    FullEditPageRoutingModule
+    ActivityPageRoutingModule
   ],
-  declarations: [FullEditPage]
+  declarations: [ActivityPage]
 })
-export class FullEditPageModule {}
+export class ActivityPageModule {}

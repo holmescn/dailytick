@@ -1,13 +1,14 @@
-<ion-header class="ion-padding">
+<ion-header>
   <ion-toolbar>
     <ion-input
+      #inputBox
       type="text"
-      [autofocus]="true"
       debounce="200"
       enterkeyhint="done"
-      placeholder="描述 #标签 #标签"></ion-input>
+      placeholder="描述 #标签 #标签"
+      (ionChange)="onChange($event)"></ion-input>
     <ion-buttons slot="primary">
-      <ion-button (click)="onOk($event)">OK</ion-button>
+      <ion-button (click)="onOk(inputBox.value)">OK</ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>

@@ -1,17 +1,21 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Tab 2
-    </ion-title>
+    <ion-segment (ionChange)="segmentChanged($event)" [value]="segment">
+      <ion-segment-button value="today">
+        <ion-label>今天</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="this_week">
+        <ion-label>本周</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="this_month">
+        <ion-label>本月</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="custom">
+        <ion-label>自定义</ion-label>
+      </ion-segment-button>
+    </ion-segment>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <app-explore-container name="Tab 2 page"></app-explore-container>
 </ion-content>

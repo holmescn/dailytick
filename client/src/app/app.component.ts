@@ -20,8 +20,12 @@ export class AppComponent {
 
   initializeApp() {
     this.platform.ready().then(() => {
-      this.statusBar.styleDefault();
-      this.splashScreen.hide();
+      // this.statusBar.styleDefault();
+      // this.splashScreen.hide();
+      const theme = localStorage.getItem("theme");
+      if (theme === 'dark') {
+        document.body.classList.add(theme);
+      }
     });
   }
 }
