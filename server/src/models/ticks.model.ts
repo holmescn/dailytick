@@ -9,7 +9,8 @@ export default function (app: Application): NeDB<any>  {
     autoload: true
   });
 
-  Model.ensureIndex({ fieldName: 'tickTime', unique: false });
+  Model.ensureIndex({ fieldName: 'tickTime', unique: true });
+  Model.ensureIndex({ fieldName: 'userId', unique: false });
 
   return Model;
 }

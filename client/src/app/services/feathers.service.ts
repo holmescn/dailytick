@@ -4,13 +4,14 @@ import * as io from 'socket.io-client';
 import * as feathers from '@feathersjs/feathers';
 import feathersSocketIOClient from '@feathersjs/socketio-client';
 import { AuthenticationRequest } from '@feathersjs/authentication/lib';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FeathersService {
   private _feathers: any = feathers();                     // init socket.io
-  private _socket = io('http://localhost:3030');      // init feathers
+  private _socket = io(environment.server);      // init feathers
   private feathersAuthClient = require('@feathersjs/authentication-client').default;
 
   constructor() {

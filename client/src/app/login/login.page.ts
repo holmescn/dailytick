@@ -10,12 +10,14 @@ import { FeathersService } from '../services/feathers.service';
 export class LoginPage implements OnInit {
   constructor(private feathers: FeathersService, private router: Router) { }
 
-  login(email: string, password: string) {
-    console.log(`${email} ${password}`)
+  validate(email, password) {
     if (!email || !password) {
-      return;
+      return true;
     }
+    return false;
+  }
 
+  login(email: string, password: string) {
     // try to authenticate with feathers
     this.feathers.login({
       strategy: 'local',

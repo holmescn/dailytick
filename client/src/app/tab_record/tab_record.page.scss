@@ -1,0 +1,25 @@
+.tick-time {
+    font-size: 1.25em;
+    padding-right: unset;
+    padding-inline-end: 0;
+    margin-right: unset;
+    margin-inline-end: 12px;
+}
+
+.tick-duration {
+    font-size: 1.0em;
+    padding-left: 0;
+    padding-inline-start: 0;
+    margin-left: unset;
+    margin-inline-start: 12px;
+}
+
+.tick-activity {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tick-tags {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

@@ -20,21 +20,19 @@
   <ion-virtual-scroll [items]="ticks"
                       [headerFn]="headerFn"
                       [trackBy]="trackByFn"
-                      approxItemHeight="55px">
+                      approxItemHeight="67px">
     <ion-item-divider *virtualHeader="let header">
       {{ header }}
     </ion-item-divider>
     <ion-item-sliding *virtualItem="let item">
       <ion-item>
+        <ion-note slot="start" (click)="editTickTime(item)" class="tick-time">{{ item._time }}</ion-note>
         <ion-label (click)="editActivity(item)">
-          <h2 class="ion-text-wrap">{{ item.activity }}</h2>
+          <h2 class="tick-activity">{{ item.activity }}</h2>
           <!-- h3>{{ item._time }} {{ item._duration }}</h3 -->
-          <p>#{{ item.tags.join("&nbsp; #") }}</p>
+          <p class="tick-tags">#{{ item.tags.join("&nbsp; #") }}</p>
         </ion-label>
-        <ion-note slot="start" (click)="editTickTime(item)">
-          <div>{{ item._duration }}</div>
-          <div>{{ item._time }}</div>
-        </ion-note>
+        <ion-note slot="end" class="tick-duration">{{ item._duration }}</ion-note>
       </ion-item>
       <ion-item-options side="end">
         <ion-item-option (click)="newTick($event, item)">插入</ion-item-option>

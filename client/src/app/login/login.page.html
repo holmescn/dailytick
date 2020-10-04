@@ -7,13 +7,11 @@
 <ion-content class="ion-padding">
   <ion-list>
     <ion-item>
-      <ion-label position="stacked">帐号</ion-label>
       <ion-input #email name="email" placeholder="请在这里输入帐号"></ion-input>
     </ion-item>
     <ion-item>
-      <ion-label position="stacked">密码</ion-label>
       <ion-input #password type="password" name="password" placeholder="请在这里输入密码"></ion-input>
     </ion-item>
   </ion-list>
-  <ion-button expand="block" (click)="login(email.value, password.value)">登录</ion-button>
+  <ion-button expand="block" [disabled]="validate(email.value, password.value)" (click)="login(email.value, password.value)">登录</ion-button>
 </ion-content>
