@@ -6,6 +6,7 @@ import requests
 import pprint
 from datetime import datetime
 from difflib import get_close_matches
+from collections import defaultdict
 
 
 class Transformer:
@@ -13,6 +14,7 @@ class Transformer:
         self.total = 0
         self.posted = 0
         self.activities = []
+        self.activity_alternatives = dict()
         self.activity_tags = dict()
         self.tags = []
         self.headers = {
@@ -26,7 +28,7 @@ class Transformer:
         self.headers['Authorization'] = 'Bearer {}'.format(data['accessToken'])
 
         self.last_tick_time = 0
-        data = requests.get(f'http://localhost:3030/ticks?$limit=200&$sort[tickTime]=1', headers=self.headers).json()
+        data = requests.get(f'http://localhost:3030/ticks?$limit=400&$sort[tickTime]=-1', headers=self.headers).json()
         for tick in data['data']:
             if tick['activity'] not in self.activities:
                 self.activities.append(tick['activity'])
@@ -51,9 +53,29 @@ class Transformer:
               self.total, self.total - self.posted)
         print(activity)
 
+        if activity not in self.activity_alternatives:
+            self.activity_alternatives[activity] = defaultdict(lambda: 0)
+
+        activities = self.activity_alternatives[activity]
+        items = list(activities.items())
+        n = len(items)
+        if n == 1:
+            a, c = items[0]
+            if c >= 5:
+                return a
+        elif n > 1:
+            for i, (a, _) in enumerate(items):
+                print(f"[{i}] {a}")
+            x = input("Choose: ").strip()
+            if x.isdigit() and int(x) < n:
+                a, _ = items[int(x)]
+                activities[a] += 1
+                return a
+
         choices = get_close_matches(activity, self.activities, cutoff=0.5)
         if len(choices) > 0:
             if choices[0] == activity:
+                activities[activity] += 1
                 return activity
 
             for i, text in enumerate(choices):
@@ -61,16 +83,20 @@ class Transformer:
 
             x = input("请选择: ").strip()
             if x.isdigit() and int(x) < len(choices):
-                return choices[int(x)]
+                activity = choices[int(x)]
+                activities[activity] += 1
+                return activity
 
         x = input("input new (empty for keep): ").strip()
         if x == '':
             if activity not in self.activities:
                 self.activities.append(activity)
+            activities[activity] += 1
             return activity
 
         if x not in self.activities:
             self.activities.append(x)
+        activities[x] += 1
         return x
 
     def to_tags(self, activity):

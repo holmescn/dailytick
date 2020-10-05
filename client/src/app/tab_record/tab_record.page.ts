@@ -9,6 +9,7 @@ import { FeathersService } from '../services/feathers.service';
 import { FormatterService } from '../services/formatter.service';
 import { Service } from '@feathersjs/feathers';
 import { Tick } from "../interfaces/tick";
+import { tick } from '@angular/core/testing';
 
 @Component({
   selector: 'app-tab_record',
@@ -46,20 +47,20 @@ export class TabRecordPage implements OnInit, OnDestroy {
     const service = this.feathers.service("ticks");
     service.on('created', (tick: Tick) => {
       const index = this.ticks.findIndex(t => t.tickTime < tick.tickTime);
-      this.ticks.splice(index, 0, this.formatTick(tick));
-      this.ticks = [...this.ticks];
+      this.ticks.splice(index, 0, tick);
+      this.ticks = [...this.ticks].map(this.formatTick.bind(this));
     });
     service.on('updated', (tick: Tick) => {
       const index = this.ticks.findIndex(_tick => _tick._id === tick._id);
       if (index >= 0) {
-        this.ticks[index] = Object.assign(this.ticks[index], this.formatTick(tick));
+        this.ticks[index] = Object.assign(this.ticks[index], this.formatTick(tick, index, this.ticks));
         this.virtualScroll.checkRange(index, 1);
       }
     });
     service.on('patched', (tick: Tick) => {
       const index = this.ticks.findIndex(_tick => _tick._id === tick._id);
       if (index >= 0) {
-        this.ticks[index] = Object.assign(this.ticks[index], this.formatTick(tick));
+        this.ticks[index] = Object.assign(this.ticks[index], this.formatTick(tick, index, this.ticks));
         this.virtualScroll.checkRange(index, 1);
       }
     });
@@ -69,10 +70,13 @@ export class TabRecordPage implements OnInit, OnDestroy {
     return service;
   }
 
-  formatTick(tick: Tick): Tick {
+  formatTick(tick: Tick, index: number, ticks: Tick[]): Tick {
+    if (tick._date && tick._time && tick._duration) {
+      return tick;
+    }
+
     const _date = this.formatter.date(tick.tickTime);
-    const index = this.ticks.findIndex(t => t._id === tick._id);
-    const _endTime = index <= 0 ? Date.now() : this.ticks[index-1].tickTime;
+    const _endTime = index <= 0 ? Date.now() : ticks[index-1].tickTime;
     return {
       ...tick,
       _date: _date === this.today ? '今天' : _date,
@@ -171,7 +175,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
     }
 
     const { data } = await this.service.find({ query });
-    return data.map(this.formatTick.bind(this));
+    return data;
   }
 
   async loadMore(event) {
@@ -179,7 +183,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
 
     // load more data
     const ticks = await this.loadData();
-    this.ticks = [...this.ticks, ...ticks];
+    this.ticks = [...this.ticks, ...ticks].map(this.formatTick.bind(this));
 
     // Hide Infinite List Loader on Complete
     event.target.complete();
@@ -196,7 +200,8 @@ export class TabRecordPage implements OnInit, OnDestroy {
 
   async doRefresh(event) {
     this.ticks = [];
-    this.ticks = await this.loadData();
+    const ticks = await this.loadData();
+    this.ticks = ticks.map(this.formatTick.bind(this));
     this.infiniteScroll.disabled = false;
     event.target.complete();
   }
@@ -257,7 +262,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.loadData().then(ticks => this.ticks = ticks);
+    this.loadData().then(ticks => this.ticks = ticks.map(this.formatTick.bind(this)));
     this.timer = window.setInterval(() => {
       if (this.ticks.length > 0) {
         const dt = (Date.now() - this.ticks[0].tickTime) / 1000;
