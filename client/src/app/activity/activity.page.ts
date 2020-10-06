@@ -74,7 +74,7 @@ export class ActivityPage implements OnInit {
     }
   }
 
-  chooseTag(activity: string, tag: string) {
+  chooseTag(activity, tag: string) {
     if (activity.indexOf(`#${tag}`) >= 0) {
       this.activity = activity.replace(new RegExp(`\\s*#${tag}`), '');
     } else {
@@ -82,11 +82,11 @@ export class ActivityPage implements OnInit {
     }
   }
 
-  tagFill(activity: string, tag: string) {
+  tagFill(activity, tag: string) {
     return activity.indexOf(tag) >= 0 ? 'solid' : "outline";
   }
 
-  onOk(text: string) {
+  onOk(text) {
     const tags: string[] = [];
     const activity = text.replace(/#[^#]+(\s+|$)/g, (tag) => {
       tags.push(tag.substring(1).trim());
@@ -95,7 +95,7 @@ export class ActivityPage implements OnInit {
     this.modal.dismiss({ action: 'ok', activity, tags });
   }
 
-  onCancel() {
+  onCancel(event) {
     this.modal.dismiss({ action: 'cancel' });
   }
 }

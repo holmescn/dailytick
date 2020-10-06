@@ -26,9 +26,15 @@
       <ion-label>常用标签</ion-label>
     </ion-item-divider>
     <ion-item>
-      <ion-button *ngFor="let tag of tags" (click)="chooseTag(inputBox.value, tag)" [fill]="tagFill(inputBox.value, tag)">
-        {{ tag }}
-      </ion-button>
+      <ion-grid>
+        <ion-row class="ion-justify-content-start ion-align-items-start ion-wrap">
+          <ion-col *ngFor="let tag of tags">
+            <ion-button (click)="chooseTag(inputBox.value, tag)" [fill]="tagFill(''+inputBox.value, tag)">
+              {{ tag }}
+            </ion-button>      
+          </ion-col>
+        </ion-row>
+      </ion-grid>
     </ion-item>
     <ion-item-divider>
       <ion-label>最近的活动</ion-label>

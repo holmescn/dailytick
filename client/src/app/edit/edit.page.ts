@@ -24,7 +24,7 @@ export class EditPage implements OnInit {
     // console.log(event);
   }
 
-  onOk(text: string) {
+  onOk(text) {
     const tags = [];
     const activity = text.replace(/#[^\s]+(\s+|$)/g, (tag) => {
       tags.push(tag.trim().substring(1));

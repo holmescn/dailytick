@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { ToastController } from '@ionic/angular';
 import { FeathersService } from '../services/feathers.service';
 
 @Component({
@@ -8,7 +9,7 @@ import { FeathersService } from '../services/feathers.service';
   styleUrls: ['./login.page.scss'],
 })
 export class LoginPage implements OnInit {
-  constructor(private feathers: FeathersService, private router: Router) { }
+  constructor(private feathers: FeathersService, private toast: ToastController, private router: Router) { }
 
   validate(email, password) {
     if (!email || !password) {
@@ -17,7 +18,7 @@ export class LoginPage implements OnInit {
     return false;
   }
 
-  login(email: string, password: string) {
+  login(email, password) {
     // try to authenticate with feathers
     this.feathers.login({
       strategy: 'local',
@@ -27,6 +28,10 @@ export class LoginPage implements OnInit {
       this.router.navigate(['/']);
     }).catch(err => {
       console.log(err);
+      this.toast.create({
+        message: `登录失败: ${err.detail}`,
+        duration: 2000
+      }).then(toast => toast.present());
     });
   }
 
