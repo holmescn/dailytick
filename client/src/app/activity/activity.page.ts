@@ -27,7 +27,6 @@ export class ActivityPage implements OnInit {
         $select: ['activity', 'tags']
       }
     });
-    this.recentActivities = ticks.map((t: Tick) => `${t.activity} #${t.tags.join(' #')}`);
 
     const { data: activities } = await this.feathers.service("activities").find({
       query: {
@@ -37,6 +36,9 @@ export class ActivityPage implements OnInit {
       }
     });
     this.freqActivities = activities.map(a => a.text);
+    this.recentActivities = ticks.map((t: Tick) => `${t.activity} #${t.tags.join(' #')}`).filter((text: string) => {
+      return activities.findIndex(a => a.text === text) < 0;
+    });
 
     const tags: string[] = [];
     ticks.forEach((tick: Tick) => {
@@ -82,7 +84,7 @@ export class ActivityPage implements OnInit {
     }
   }
 
-  tagFill(activity, tag: string) {
+  tagChosen(activity, tag: string) {
     return activity.indexOf(tag) >= 0 ? 'solid' : "outline";
   }
 

@@ -27,9 +27,11 @@
     </ion-item-divider>
     <ion-item>
       <ion-grid>
-        <ion-row class="ion-justify-content-start ion-align-items-start ion-wrap">
-          <ion-col *ngFor="let tag of tags">
-            <ion-button (click)="chooseTag(inputBox.value, tag)" [fill]="tagFill(''+inputBox.value, tag)">
+        <ion-row class="ion-justify-content-start">
+          <ion-col *ngFor="let tag of tags" class="ion-no-padding">
+            <ion-button
+              [fill]="tagChosen(inputBox.value, tag)"
+              (click)="chooseTag(inputBox.value, tag)">
               {{ tag }}
             </ion-button>      
           </ion-col>
