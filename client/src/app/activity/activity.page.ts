@@ -19,26 +19,29 @@ export class ActivityPage implements OnInit {
   constructor(private modal: ModalController, private feathers: FeathersService) { }
 
   async ngOnInit() {
-    const { data: ticks } = await this.feathers.service("ticks").find({
-      query: {
-        $sort: { tickTime: -1 },
-        $limit: 5,
-        $skip: 1,
-        $select: ['activity', 'tags']
-      }
-    });
-
     const { data: activities } = await this.feathers.service("activities").find({
       query: {
         $sort: { freq: -1 },
-        $limit: 10,
+        $limit: 20,
         $select: ["text"]
       }
     });
     this.freqActivities = activities.map(a => a.text);
+
+    const { data: ticks } = await this.feathers.service("ticks").find({
+      query: {
+        $sort: { tickTime: -1 },
+        $limit: 10,
+        $skip: 1,
+        $select: ['activity', 'tags']
+      }
+    });
     this.recentActivities = ticks.map((t: Tick) => `${t.activity} #${t.tags.join(' #')}`).filter((text: string) => {
       return activities.findIndex(a => a.text === text) < 0;
     });
+    if (this.recentActivities.length > 5) {
+        this.recentActivities = this.recentActivities.slice(0, 5);
+    }
 
     const tags: string[] = [];
     ticks.forEach((tick: Tick) => {
