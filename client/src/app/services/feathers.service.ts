@@ -10,8 +10,8 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class FeathersService {
-  private _feathers: any = feathers();                     // init socket.io
-  private _socket = io(environment.server);      // init feathers
+  private _feathers: any = feathers();        // init socket.io
+  private _socket = io(environment.serverUrl); // init feathers
   private feathersAuthClient = require('@feathersjs/authentication-client').default;
 
   constructor() {

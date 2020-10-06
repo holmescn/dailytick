@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  server: 'https://dailytick-v2.holmesconan.me/api/',
+  serverUrl: `https://${window.location.host}/api/`,
 };
