@@ -6,6 +6,7 @@ import tags from './tags/tags.service';
 import stats from './stats/stats.service';
 import _exports from './exports/exports.service';
 import helpers from './helpers/helpers.service';
+import stats from './stats/stats.service';
 // Don't remove this comment. It's needed to format import lines nicely.
 
 export default function (app: Application): void {
@@ -16,4 +17,5 @@ export default function (app: Application): void {
   app.configure(stats);
   app.configure(_exports);
   app.configure(helpers);
+  app.configure(stats);
 }
