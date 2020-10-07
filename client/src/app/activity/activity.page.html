@@ -6,14 +6,14 @@
       </ion-button>
     </ion-buttons>
     <ion-input
-      #inputBox
       type="text"
       debounce="200"
       enterkeyhint="done"
       placeholder="描述 #标签"
-      [value]="activity"></ion-input>
+      [value]="activity"
+      (ionChange)="onChange($event, data)"></ion-input>
     <ion-buttons slot="end">
-      <ion-button (click)="onOk(inputBox.value)">
+      <ion-button (click)="onOk($event)">
         <ion-icon slot="icon-only" name="checkmark-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -30,8 +30,8 @@
         <ion-row class="ion-justify-content-start">
           <ion-col *ngFor="let tag of tags" class="ion-no-padding">
             <ion-button
-              [fill]="tagChosen(inputBox.value, tag)"
-              (click)="chooseTag(inputBox.value, tag)">
+              [fill]="tagChosen(tag)"
+              (click)="chooseTag(tag)">
               {{ tag }}
             </ion-button>      
           </ion-col>

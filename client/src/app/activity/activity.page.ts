@@ -67,6 +67,12 @@ export class ActivityPage implements OnInit {
     this.tags = tags;
   }
 
+  onChange(event, value) {
+      console.log(event.detail);
+      console.log(value);
+      this.activity = event.detail.data;
+  }
+
   chooseActivity(activity: string) {
     if (this.dblclickTimer) {
       window.clearTimeout(this.dblclickTimer);
@@ -79,21 +85,21 @@ export class ActivityPage implements OnInit {
     }
   }
 
-  chooseTag(activity, tag: string) {
+  chooseTag(tag: string) {
     if (activity.indexOf(`#${tag}`) >= 0) {
-      this.activity = activity.replace(new RegExp(`\\s*#${tag}`), '');
+      this.activity = this.activity.replace(new RegExp(`\\s*#${tag}`), '');
     } else {
       this.activity = `${this.activity} #${tag}`;
     }
   }
 
-  tagChosen(activity, tag: string) {
-    return activity.indexOf(tag) >= 0 ? 'solid' : "outline";
+  tagChosen(tag: string) {
+    return activity.indexOf(`#${tag}`) >= 0 ? 'solid' : "outline";
   }
 
-  onOk(text) {
+  onOk(event) {
     const tags: string[] = [];
-    const activity = text.replace(/#[^#]+(\s+|$)/g, (tag) => {
+    const activity = this.activity.replace(/#[^#]+(\s+|$)/g, (tag) => {
       tags.push(tag.substring(1).trim());
       return '';
     }).trim();

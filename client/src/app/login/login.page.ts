@@ -9,7 +9,18 @@ import { FeathersService } from '../services/feathers.service';
   styleUrls: ['./login.page.scss'],
 })
 export class LoginPage implements OnInit {
+  email: string;
+  password: string;
+
   constructor(private feathers: FeathersService, private toast: ToastController, private router: Router) { }
+
+  onEmailChanged(event) {
+      this.email = event.detail.data;
+  }
+
+  onPasswordChanged(event) {
+      this.password = event.detail.data;
+  }
 
   validate(email, password) {
     if (!email || !password) {
@@ -18,12 +29,12 @@ export class LoginPage implements OnInit {
     return false;
   }
 
-  login(email, password) {
+  login(event) {
     // try to authenticate with feathers
     this.feathers.login({
       strategy: 'local',
-      email,
-      password
+      email: this.email,
+      password: this.password
     }).then(() => { // navigate to base URL on success
       this.router.navigate(['/']);
     }).catch(err => {
