@@ -11,7 +11,7 @@
       enterkeyhint="done"
       placeholder="描述 #标签"
       [value]="activity"
-      (ionChange)="onChange($event, data)"></ion-input>
+      (ionChange)="onChange($event)"></ion-input>
     <ion-buttons slot="end">
       <ion-button (click)="onOk($event)">
         <ion-icon slot="icon-only" name="checkmark-outline"></ion-icon>
@@ -30,8 +30,8 @@
         <ion-row class="ion-justify-content-start">
           <ion-col *ngFor="let tag of tags" class="ion-no-padding">
             <ion-button
-              [fill]="tagChosen(tag)"
-              (click)="chooseTag(tag)">
+              [fill]="tagState(tag)"
+              (click)="toggleTag(tag)">
               {{ tag }}
             </ion-button>      
           </ion-col>
@@ -42,13 +42,13 @@
       <ion-label>最近的活动</ion-label>
     </ion-item-divider>
     <ion-item *ngFor="let a of recentActivities">
-      <ion-label (click)="chooseActivity(a)">{{ a }}</ion-label>
+      <ion-label (click)="clickActivity(a)">{{ a }}</ion-label>
     </ion-item>
     <ion-item-divider>
       <ion-label>经常活动</ion-label>
     </ion-item-divider>
     <ion-item *ngFor="let a of freqActivities">
-      <ion-label (click)="chooseActivity(a)">{{ a }}</ion-label>
+      <ion-label (click)="clickActivity(a)">{{ a }}</ion-label>
     </ion-item>
   </ion-list>
 </ion-content>

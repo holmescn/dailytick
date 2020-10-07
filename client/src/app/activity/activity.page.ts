@@ -23,10 +23,10 @@ export class ActivityPage implements OnInit {
       query: {
         $sort: { freq: -1 },
         $limit: 20,
-        $select: ["text"]
+        $select: ["activity"]
       }
     });
-    this.freqActivities = activities.map(a => a.text);
+    this.freqActivities = activities.map(a => a.activity);
 
     const { data: ticks } = await this.feathers.service("ticks").find({
       query: {
@@ -67,13 +67,11 @@ export class ActivityPage implements OnInit {
     this.tags = tags;
   }
 
-  onChange(event, value) {
-      console.log(event.detail);
-      console.log(value);
-      this.activity = event.detail.data;
+  onChange(event: any) {
+    this.activity = event.detail.value;
   }
 
-  chooseActivity(activity: string) {
+  clickActivity(activity: string) {
     if (this.dblclickTimer) {
       window.clearTimeout(this.dblclickTimer);
       this.dblclickTimer = 0;
@@ -85,16 +83,16 @@ export class ActivityPage implements OnInit {
     }
   }
 
-  chooseTag(tag: string) {
-    if (activity.indexOf(`#${tag}`) >= 0) {
+  toggleTag(tag: string) {
+    if (this.activity.indexOf(`#${tag}`) >= 0) {
       this.activity = this.activity.replace(new RegExp(`\\s*#${tag}`), '');
     } else {
       this.activity = `${this.activity} #${tag}`;
     }
   }
 
-  tagChosen(tag: string) {
-    return activity.indexOf(`#${tag}`) >= 0 ? 'solid' : "outline";
+  tagState(tag: string) {
+    return this.activity.indexOf(`#${tag}`) >= 0 ? 'solid' : "outline";
   }
 
   onOk(event) {

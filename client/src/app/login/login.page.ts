@@ -14,15 +14,15 @@ export class LoginPage implements OnInit {
 
   constructor(private feathers: FeathersService, private toast: ToastController, private router: Router) { }
 
-  onEmailChanged(event) {
-      this.email = event.detail.data;
+  onChange(type: string, event: CustomEvent) {
+    if (type === 'email') {
+      this.email = event.detail.value;
+    } else if (type === 'password') {
+      this.password = event.detail.value;
+    }
   }
 
-  onPasswordChanged(event) {
-      this.password = event.detail.data;
-  }
-
-  validate(email, password) {
+  validate(email: string, password: string) {
     if (!email || !password) {
       return true;
     }
