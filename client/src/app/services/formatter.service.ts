@@ -28,9 +28,10 @@ export class FormatterService {
   }
 
   duration(dt: number) {
-    const h = Math.floor(dt / 1000 / 3600);
-    const m = Math.floor(dt / 1000 % 3600 / 60);
-    const s = Math.floor(dt / 1000 % 3600 % 60);
+    dt = dt / 1000;
+    const h = Math.floor(dt / 3600);
+    const m = Math.floor(dt % 3600 / 60);
+    const s = Math.floor(dt % 3600 % 60);
     if (h === 0) {
       return `${m}m ${s}s`;
     }

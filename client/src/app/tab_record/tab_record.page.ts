@@ -9,7 +9,7 @@ import { FeathersService } from '../services/feathers.service';
 import { FormatterService } from '../services/formatter.service';
 import { Service } from '@feathersjs/feathers';
 import { Tick } from "../interfaces/tick";
-import { tick } from '@angular/core/testing';
+import { receiveMessageOnPort } from 'worker_threads';
 
 @Component({
   selector: 'app-tab_record',
@@ -29,7 +29,6 @@ export class TabRecordPage implements OnInit, OnDestroy {
   editingMaxTickTime: string;
   isEditingTickTime = false;
   itemsPerPage = 25;
-  today: string;
 
   @ViewChild(IonInfiniteScroll) infiniteScroll: IonInfiniteScroll;
   @ViewChild(IonVirtualScroll) virtualScroll: IonVirtualScroll;
@@ -39,7 +38,6 @@ export class TabRecordPage implements OnInit, OnDestroy {
               private alert: AlertController,
               private feathers: FeathersService,
               private formatter: FormatterService) {
-    this.today = this.formatter.date(Date.now());
     this.service = this.bindServiceEvents();
   }
 
@@ -47,20 +45,26 @@ export class TabRecordPage implements OnInit, OnDestroy {
     const service = this.feathers.service("ticks");
     service.on('created', (tick: Tick) => {
       const index = this.ticks.findIndex(t => t.tickTime < tick.tickTime);
-      this.ticks.splice(index, 0, tick);
-      this.ticks = [...this.ticks].map(this.formatTick.bind(this));
+      this.ticks.splice(index, 0, Object.assign(tick, {
+        _date: this.formatter.date(tick.tickTime)
+      }));
+      this.ticks = [...this.ticks];
     });
     service.on('updated', (tick: Tick) => {
       const index = this.ticks.findIndex(_tick => _tick._id === tick._id);
       if (index >= 0) {
-        this.ticks[index] = Object.assign(this.ticks[index], this.formatTick(tick, index, this.ticks));
+        this.ticks[index] = Object.assign(this.ticks[index], {
+          _date: this.formatter.date(tick.tickTime)
+        });
         this.virtualScroll.checkRange(index, 1);
       }
     });
     service.on('patched', (tick: Tick) => {
       const index = this.ticks.findIndex(_tick => _tick._id === tick._id);
       if (index >= 0) {
-        this.ticks[index] = Object.assign(this.ticks[index], this.formatTick(tick, index, this.ticks));
+        this.ticks[index] = Object.assign(this.ticks[index], {
+          _date: this.formatter.date(tick.tickTime)
+        });
         this.virtualScroll.checkRange(index, 1);
       }
     });
@@ -70,20 +74,14 @@ export class TabRecordPage implements OnInit, OnDestroy {
     return service;
   }
 
-  formatTick(tick: Tick, index: number, ticks: Tick[]): Tick {
-    if (tick._date && tick._time && tick._duration) {
-      return tick;
-    }
+  formatTime(tick: Tick): string {
+    return this.formatter.time(tick.tickTime);
+  }
 
-    const _date = this.formatter.date(tick.tickTime);
-    const _endTime = index <= 0 ? Date.now() : ticks[index-1].tickTime;
-    return {
-      ...tick,
-      _date: _date === this.today ? '今天' : _date,
-      _time: this.formatter.time(tick.tickTime),
-      _duration: this.formatter.duration(_endTime - tick.tickTime),
-      _endTime,
-    };
+  formatDuration(tick: Tick): string {
+    const index = this.ticks.findIndex((t: Tick) => tick._id === t._id);
+    const _endTime = index <= 0 ? Date.now() : this.ticks[index-1].tickTime;
+    return this.formatter.duration(_endTime - tick.tickTime);
   }
 
   async showModal(activity: string) {
@@ -163,27 +161,23 @@ export class TabRecordPage implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  async loadData() {
+  async loadData(tickTime: number) {
     const query: any = {
+      tickTime: { $lt: tickTime },
       $sort: { tickTime: -1 },
       $limit: this.itemsPerPage,
     };
-    if (this.ticks.length > 0) {
-      query.tickTime = {
-        $lt: this.ticks[this.ticks.length-1].tickTime
-      }
-    }
 
     const { data } = await this.service.find({ query });
     return data;
   }
 
   async loadMore(event) {
-    console.log("loadMore");
-
     // load more data
-    const ticks = await this.loadData();
-    this.ticks = [...this.ticks, ...ticks].map(this.formatTick.bind(this));
+    const ticks = await this.loadData(this.ticks[this.ticks.length-1].tickTime);
+    this.ticks = [...this.ticks, ...ticks.map((t: Tick) => Object.assign(t, {
+      _date: this.formatter.date(t.tickTime)
+    }))];
 
     // Hide Infinite List Loader on Complete
     event.target.complete();
@@ -199,9 +193,10 @@ export class TabRecordPage implements OnInit, OnDestroy {
   }
 
   async doRefresh(event) {
-    this.ticks = [];
-    const ticks = await this.loadData();
-    this.ticks = ticks.map(this.formatTick.bind(this));
+    const ticks = await this.loadData(Date.now());
+    this.ticks = ticks.map((t: Tick) => Object.assign(t, {
+      _date: this.formatter.date(t.tickTime)
+    }));
     this.infiniteScroll.disabled = false;
     event.target.complete();
   }
@@ -225,16 +220,21 @@ export class TabRecordPage implements OnInit, OnDestroy {
       this.editingTick = tick;
       this.editingTickTime = this.formatter.toISOString(tick.tickTime);
       const index = this.ticks.findIndex(t => t._id === tick._id);
+      const tMin = this.ticks[Math.min(index+1, this.ticks.length-1)].tickTime;
       const tMax = index === 0 ? Date.now() : this.ticks[index-1].tickTime;
-      const tMin = index+1 < this.ticks.length ? this.ticks[index+1].tickTime : this.ticks[index].tickTime;
 
-      this.editingMinTickTime = this.formatter.toISOString(tMin).substr(0, 11) + '00:00:00Z';
-      this.editingMaxTickTime = this.formatter.toISOString(tMax).substr(0, 11) + '23:59:59Z';
+      const dMin = this.formatter.toISOString(tMin).substr(0, 10);
+      const dMax = this.formatter.toISOString(tMax).substr(0, 10);
 
-      if (this.editingMaxTickTime.substr(0, 10) === this.editingMinTickTime.substr(0, 10)) {
-        this.pickerFormat = "HH:mm:ss+0800";
+      this.editingMinTickTime = `${dMin}T00:00:00Z`;
+      this.editingMaxTickTime = `${dMax}T23:59:59Z`;
+
+      if (dMax === dMin) {
+        this.pickerFormat = "hh:mm:ss A";
+      } else if (dMax.substr(0, 7) === dMin.substr(0, 7)) {
+        this.pickerFormat = "DD hh:mm:ss A";
       } else {
-        this.pickerFormat = "HH:mm:ss+0800";
+        this.pickerFormat = "MM/DD hh:mm:ss A";
       }
 
       this.editingTimer = window.setTimeout(() => {
@@ -256,7 +256,13 @@ export class TabRecordPage implements OnInit, OnDestroy {
 
   headerFn(record: Tick, index: number, records: Tick[]) {
     if (index === 0 || (index < records.length && record._date !== records[index-1]._date)) {
-      return record._date;
+      const d = new Date();
+      const M = d.getMonth() + 1;
+      const D = d.getDate();
+      const MM = M < 10 ? `0${M}` : M;
+      const DD = D < 10 ? `0${D}` : D;
+      const today = `${d.getFullYear()}-${MM}-${DD}`;
+      return record._date === today ? '今天' : record._date;
     }
     return null;
   }
@@ -266,7 +272,12 @@ export class TabRecordPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.loadData().then(ticks => this.ticks = ticks.map(this.formatTick.bind(this)));
+    this.loadData(Date.now()).then((ticks: Tick[]) => {
+      this.ticks = ticks.map((t: Tick) => Object.assign(t, {
+        _date: this.formatter.date(t.tickTime)
+      }));
+    });
+
     this.timer = window.setInterval(() => {
       if (this.ticks.length > 0) {
         const dt = (Date.now() - this.ticks[0].tickTime) / 1000;
@@ -281,7 +292,6 @@ export class TabRecordPage implements OnInit, OnDestroy {
         } else {
           this.title = `${mm}:${ss}`;
         }
-        this.ticks[0]._duration = this.formatter.duration(dt*1000);
       }
     }, 1000);
   }

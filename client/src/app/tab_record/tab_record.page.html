@@ -26,13 +26,13 @@
     </ion-item-divider>
     <ion-item-sliding *virtualItem="let item">
       <ion-item>
-        <ion-note slot="start" (click)="editTickTime(item)" class="tick-time">{{ item._time }}</ion-note>
+        <ion-note slot="start" (click)="editTickTime(item)" class="tick-time">{{ formatTime(item) }}</ion-note>
         <ion-label (click)="editActivity(item)">
           <h2 class="tick-activity">{{ item.activity }}</h2>
           <!-- h3>{{ item._time }} {{ item._duration }}</h3 -->
           <p class="tick-tags">#{{ item.tags.join("&nbsp; #") }}</p>
         </ion-label>
-        <ion-note slot="end" class="tick-duration">{{ item._duration }}</ion-note>
+        <ion-note slot="end" class="tick-duration">{{ formatDuration(item) }}</ion-note>
       </ion-item>
       <ion-item-options side="end">
         <ion-item-option (click)="newTick($event, item)">插入</ion-item-option>
