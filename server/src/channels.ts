@@ -18,13 +18,13 @@ export default function(app: Application): void {
     // real-time connection, e.g. when logging in via REST
     if(connection) {
       // Obtain the logged in user from the connection
-      // const user = connection.user;
+      const user = connection.user;
       
       // The connection is no longer anonymous, remove it
       app.channel('anonymous').leave(connection);
 
       // Add it to the authenticated user channel
-      app.channel('authenticated').join(connection);
+      // app.channel('authenticated').join(connection);
 
       // Channels can be named anything and joined on any condition 
       
@@ -36,11 +36,14 @@ export default function(app: Application): void {
       
       // Easily organize users by email and userid for things like messaging
       // app.channel(`emails/${user.email}`).join(connection);
-      // app.channel(`userIds/${user.id}`).join(connection);
+      const channelName = `users/id/${user._id}`;
+      console.info(`Join authenticated connection to channel '${channelName}'.`);
+      app.channel(channelName).join(connection);
     }
   });
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  /*
   app.publish((data: any, hook: HookContext) => {
     // Here you can add event publishers to channels set up in `channels.js`
     // To publish only for a specific event use `app.publish(eventname, () => {})`
@@ -50,16 +53,20 @@ export default function(app: Application): void {
     // e.g. to publish all service events to all authenticated users use
     return app.channel('authenticated');
   });
+  */
 
   // Here you can also add service specific event publishers
   // e.g. the publish the `users` service `created` event to the `admins` channel
   // app.service('users').publish('created', () => app.channel('admins'));
   
   // With the userid and email organization from above you can easily select involved users
-  // app.service('messages').publish(() => {
-  //   return [
-  //     app.channel(`userIds/${data.createdBy}`),
-  //     app.channel(`emails/${data.recipientEmail}`)
-  //   ];
-  // });
+  app.service('ticks').publish((data, context) => {
+    const channelName = `users/id/${context.params.user._id}`;
+    return app.channel(channelName);
+
+    // return [
+    //   app.channel(`userIds/${data.createdBy}`),
+    //   app.channel(`emails/${data.recipientEmail}`)
+    // ];
+  });
 }

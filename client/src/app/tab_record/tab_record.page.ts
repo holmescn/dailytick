@@ -53,7 +53,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
     service.on('updated', (tick: Tick) => {
       const index = this.ticks.findIndex(_tick => _tick._id === tick._id);
       if (index >= 0) {
-        this.ticks[index] = Object.assign(this.ticks[index], {
+        this.ticks[index] = Object.assign(this.ticks[index], tick, {
           _date: this.formatter.date(tick.tickTime)
         });
         this.virtualScroll.checkRange(index, 1);
@@ -62,7 +62,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
     service.on('patched', (tick: Tick) => {
       const index = this.ticks.findIndex(_tick => _tick._id === tick._id);
       if (index >= 0) {
-        this.ticks[index] = Object.assign(this.ticks[index], {
+        this.ticks[index] = Object.assign(this.ticks[index], tick, {
           _date: this.formatter.date(tick.tickTime)
         });
         this.virtualScroll.checkRange(index, 1);
@@ -267,8 +267,8 @@ export class TabRecordPage implements OnInit, OnDestroy {
     return null;
   }
 
-  trackByFn(index, item) {
-    return (item && item._id) ? item._id : index;
+  trackByFn(index: number, item: Tick) {
+    return (item && item._id) ? item._id : item.tickTime;
   }
 
   ngOnInit() {
