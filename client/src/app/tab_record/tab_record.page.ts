@@ -206,7 +206,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
     event.target.complete();
   }
 
-  async editTickTime(tick) {
+  async editTickTime(tick: Tick) {
     const self = this;
     if (this.editingTimer) {
       window.clearTimeout(this.editingTimer);
@@ -226,14 +226,17 @@ export class TabRecordPage implements OnInit, OnDestroy {
       this.editingTickTime = this.formatter.toISOString(tick.tickTime);
       const index = this.ticks.findIndex(t => t._id === tick._id);
       const tMax = index === 0 ? Date.now() : this.ticks[index-1].tickTime;
-      this.editingMaxTickTime = this.formatter.toISOString(tMax);
       const tMin = index+1 < this.ticks.length ? this.ticks[index+1].tickTime : this.ticks[index].tickTime;
-      this.editingMinTickTime = this.formatter.toISOString(tMin);
-      if (this.formatter.date(tMin) === this.formatter.date(tMax)) {
-        this.pickerFormat = "HH:mm:ss"
+
+      this.editingMaxTickTime = this.formatter.toISOString(tMax).substr(0, 10);
+      this.editingMinTickTime = this.formatter.toISOString(tMin).substr(0, 10);
+
+      if (this.editingMaxTickTime === this.editingMinTickTime) {
+        this.pickerFormat = "HH:mm:ss+0800";
       } else {
-        this.pickerFormat = "dd HH:mm"
+        this.pickerFormat = "HH:mm:ss+0800";
       }
+
       this.editingTimer = window.setTimeout(() => {
         self.editingTimer = null;
       }, 250);
@@ -241,10 +244,11 @@ export class TabRecordPage implements OnInit, OnDestroy {
   }
 
   changeTickTime(event) {
-    if (event.detail.value !== this.editingTickTime) {
-      const t = new Date(event.detail.value);
+    const t1 = (new Date(event.detail.value)).getTime();
+    const t0 = this.editingTick.tickTime;
+    if (t1 > t0 || t1 < t0) {
       this.service.patch(this.editingTick._id, {
-        tickTime: t.getTime()
+        tickTime: t1
       });
     }
     this.isEditingTickTime = false;

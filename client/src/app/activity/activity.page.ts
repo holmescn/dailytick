@@ -56,14 +56,15 @@ export class ActivityPage implements OnInit {
       query: {
         $sort: { freq: -1 },
         $limit: 10,
-        $select: ["text"]
+        $select: ["tag"]
       }
     });
     freqTags.forEach(tag => {
-      if (tags.indexOf(tag.text) === -1) {
-        tags.push(tag.text);
+      if (tags.indexOf(tag.tag) === -1) {
+        tags.push(tag.tag);
       }
-    })
+    });
+
     this.tags = tags;
   }
 

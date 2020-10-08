@@ -8,13 +8,26 @@ import { FeathersService } from '../services/feathers.service';
   styleUrls: ['./signup.page.scss'],
 })
 export class SignupPage implements OnInit {
+  email: string;
+  password: string;
+  confirmPassword: string;
 
   constructor(private feathers: FeathersService, private toast: ToastController) { }
 
   ngOnInit() {
   }
 
-  validate(email, password, confirmPassword) {
+  onChange(type: string, event: CustomEvent) {
+    if (type === 'email') {
+      this.email = event.detail.value;
+    } else if (type === 'password') {
+      this.password = event.detail.value;
+    } else if (type === 'confirm-password') {
+      this.confirmPassword = event.detail.value;
+    }
+  }
+
+  validate(email: string, password: string, confirmPassword: string): boolean {
     if (!email || !password || !confirmPassword) {
       return true;
     }
