@@ -228,10 +228,10 @@ export class TabRecordPage implements OnInit, OnDestroy {
       const tMax = index === 0 ? Date.now() : this.ticks[index-1].tickTime;
       const tMin = index+1 < this.ticks.length ? this.ticks[index+1].tickTime : this.ticks[index].tickTime;
 
-      this.editingMaxTickTime = this.formatter.toISOString(tMax).substr(0, 10);
-      this.editingMinTickTime = this.formatter.toISOString(tMin).substr(0, 10);
+      this.editingMinTickTime = this.formatter.toISOString(tMin).substr(0, 11) + '00:00:00Z';
+      this.editingMaxTickTime = this.formatter.toISOString(tMax).substr(0, 11) + '23:59:59Z';
 
-      if (this.editingMaxTickTime === this.editingMinTickTime) {
+      if (this.editingMaxTickTime.substr(0, 10) === this.editingMinTickTime.substr(0, 10)) {
         this.pickerFormat = "HH:mm:ss+0800";
       } else {
         this.pickerFormat = "HH:mm:ss+0800";

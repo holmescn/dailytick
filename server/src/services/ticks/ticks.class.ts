@@ -58,6 +58,7 @@ export class Ticks extends Service {
           $inc: { freq: 1 }
         }, {
           ...params,
+          provider: undefined,
           nedb: { upsert: true }
         });
       } catch (e) {
@@ -83,6 +84,7 @@ export class Ticks extends Service {
           $inc: { freq: 1 }
         }, {
           ...params,
+          provider: undefined,
           nedb: { upsert: true }
         });
       } catch (e) {
@@ -95,7 +97,10 @@ export class Ticks extends Service {
       const result = await this.app.service('tags').create({
         tag,
         freq: 1,
-      }, params);
+      }, {
+        ...params,
+        provider: undefined
+      });
     } catch (e) {
       console.error(e);
     }
