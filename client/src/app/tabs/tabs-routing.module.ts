@@ -12,8 +12,8 @@ const routes: Routes = [
         loadChildren: () => import('../tab_record/tab_record.module').then(m => m.Tab1PageModule)
       },
       {
-        path: 'tab_stats',
-        loadChildren: () => import('../tab_stats/tab_stats.module').then(m => m.TabStatsPageModule)
+        path: 'tab_statistic',
+        loadChildren: () => import('../tab_statistic/tab_statistic.module').then(m => m.TabStatisticPageModule)
       },
       {
         path: 'tab_settings',

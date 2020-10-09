@@ -5,7 +5,7 @@ interface Data {}
 
 interface ServiceOptions {}
 
-export class Stats implements ServiceMethods<Data> {
+export class ExportCsv implements ServiceMethods<Data> {
   app: Application;
   options: ServiceOptions;
 

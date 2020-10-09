@@ -37,25 +37,17 @@ export class ActivityPage implements OnInit {
       }
     });
     this.recentActivities = ticks.map((t: Tick) => `${t.activity} #${t.tags.join(' #')}`).filter((text: string) => {
-      return activities.findIndex(a => a.text === text) < 0;
+      return activities.findIndex(a => a.activity === text) < 0;
     });
     if (this.recentActivities.length > 5) {
         this.recentActivities = this.recentActivities.slice(0, 5);
     }
 
     const tags: string[] = [];
-    ticks.forEach((tick: Tick) => {
-      tick.tags.forEach((tag: string) => {
-        if (tags.indexOf(tag) === -1) {
-          tags.push(tag);
-        }
-      });
-    });
-
     const { data: freqTags } = await this.feathers.service("tags").find({
       query: {
         $sort: { freq: -1 },
-        $limit: 10,
+        $limit: 15,
         $select: ["tag"]
       }
     });
@@ -63,6 +55,14 @@ export class ActivityPage implements OnInit {
       if (tags.indexOf(tag.tag) === -1) {
         tags.push(tag.tag);
       }
+    });
+
+    ticks.forEach((tick: Tick) => {
+      tick.tags.forEach((tag: string) => {
+        if (tags.indexOf(tag) === -1) {
+          tags.push(tag);
+        }
+      });
     });
 
     this.tags = tags;

@@ -2,7 +2,6 @@ import { Params } from '@feathersjs/feathers';
 import { Service, NedbServiceOptions } from 'feathers-nedb';
 import { Application } from '../../declarations';
 
-
 export class Ticks extends Service {
   app: Application;
 
@@ -11,12 +10,111 @@ export class Ticks extends Service {
     this.app = app;
   }
 
-  find(params: Params): Promise<any> {
-    return super.find(Object.assign(params, {
-      query: Object.assign(params.query, {
+  async find (params: Params): Promise<any> {
+    if (typeof params?.query?.tickTime === 'string') {
+      switch(params.query.tickTime) {
+      case 'today': return await this.todayTicks(params, params.query.now);
+      case 'this-week': return await this.thisWeekTicks(params, params.query.now);
+      case 'this-month': return await this.thisMonthTicks(params, params.query.now);
+      case 'custom': return await this.customTimeTicks(params);
+      default: return [];
+      }
+    }
+  
+    return await super.find({
+      ...params,
+      query: {
+        ...params.query,
         userId: params.user._id
-      })
-    }));
+      }
+    });
+  }
+
+  async findBetween(startTime: number, endTime: number, params: Params): Promise<any[]> {
+    const $select = ['activity', 'tickTime', 'tags'];
+    const ticks = await this._find({
+      ...params,
+      provider: undefined,
+      paginate: false,
+      query: {
+        tickTime: {
+          $gte: startTime,
+          $lte: endTime
+        },
+        $sort: { tickTime: 1 },
+        $select
+      }
+    });
+
+    const tickBeforeStartTime = await this._find({
+      ...params,
+      provider: undefined,
+      paginate: false,
+      query: {
+        tickTime: { $lt: startTime },
+        $sort: { tickTime: 1 },
+        $limit: 1,
+        $select
+      }
+    });
+  
+    const tickAfterEndTime = await this._find({
+      ...params,
+      provider: undefined,
+      paginate: false,
+      query: {
+        tickTime: { $gt: endTime },
+        $sort: { tickTime: 1 },
+        $limit: 1,
+        $select
+      }
+    });
+
+    return [...tickBeforeStartTime, ...ticks, ...tickAfterEndTime];
+  }
+
+  async todayTicks(params: Params, now: number): Promise<any> {
+    const t0 = new Date(now);
+    const Y = t0.getFullYear();
+    const M = t0.getMonth();
+    const D = t0.getDate();
+    const startTime = new Date(Y, M, D);
+    const endTime = new Date(Y, M, D+1);
+  
+    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
+  }
+
+  async thisWeekTicks(params: Params, now: number): Promise<any> {
+    const t0 = new Date(now);
+    const Y = t0.getFullYear();
+    const M = t0.getMonth();
+    const D = t0.getDate();
+    const startTime = new Date(Y, M, D);
+    if (startTime.getDay() > 1) {
+      startTime.setDate(startTime.getDate() - startTime.getDay() + 1);
+    }
+    const endTime = new Date(Y, M, D);
+    if (endTime.getDay() > 0) {
+      endTime.setDate(endTime.getDate() + (7 - endTime.getDay()) + 1);
+    }
+  
+    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
+  }
+
+  async thisMonthTicks(params: Params, now: number): Promise<any> {
+    const t0 = new Date(now);
+    const Y = t0.getFullYear();
+    const M = t0.getMonth();
+    const D = t0.getDate();
+    const startTime = new Date(Y, M, 1);
+    const endTime = new Date(Y, M+1, 1);
+    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
+  }
+
+  async customTimeTicks(params: Params): Promise<any> {
+    const startTime = params.query?.startTime as number;
+    const endTime = params.query?.endTime as number;
+    return this.findBetween(startTime, endTime, params);
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

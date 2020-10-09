@@ -1,13 +1,13 @@
-// Initializes the `helpers` service on path `/helpers`
+// Initializes the `exportCsv` service on path `/export-csv`
 import { ServiceAddons } from '@feathersjs/feathers';
 import { Application } from '../../declarations';
-import { Helpers } from './helpers.class';
-import hooks from './helpers.hooks';
+import { ExportCsv } from './export-csv.class';
+import hooks from './export-csv.hooks';
 
 // Add this service to the service type index
 declare module '../../declarations' {
   interface ServiceTypes {
-    'helpers': Helpers & ServiceAddons<any>;
+    'export-csv': ExportCsv & ServiceAddons<any>;
   }
 }
 
@@ -17,10 +17,10 @@ export default function (app: Application): void {
   };
 
   // Initialize our service with any options it requires
-  app.use('/helpers', new Helpers(options, app));
+  app.use('/export-csv', new ExportCsv(options, app));
 
   // Get our initialized service so that we can register hooks
-  const service = app.service('helpers');
+  const service = app.service('export-csv');
 
   service.hooks(hooks);
 }

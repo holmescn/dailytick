@@ -3,17 +3,17 @@ import { RouterModule } from '@angular/router';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TabStatsPage } from './tab_stats.page';
+import { TabStatisticPage } from './tab_statistic.page';
 
-import { TabStatsPageRoutingModule } from './tab_stats-routing.module';
+import { TabStatisticPageRoutingModule } from './tab_statistic-routing.module';
 
 @NgModule({
   imports: [
     IonicModule,
     CommonModule,
     FormsModule,
-    TabStatsPageRoutingModule
+    TabStatisticPageRoutingModule
   ],
-  declarations: [TabStatsPage]
+  declarations: [TabStatisticPage]
 })
-export class TabStatsPageModule {}
+export class TabStatisticPageModule {}

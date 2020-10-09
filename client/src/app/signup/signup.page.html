@@ -16,5 +16,11 @@
       <ion-input type="password" name="confirm_password" placeholder="Confrim password" [value]="confirmPassword" (ionChange)="onChange('confirm-password', $event)"></ion-input>
     </ion-item>
   </ion-list>
-  <ion-button expand="block" [disabled]="validate(email, password, confirmPassword)" (click)="signUp(email, password)">注册</ion-button>
+  <ion-grid>
+    <ion-row>
+      <ion-col>
+        <ion-button expand="full" [disabled]="validate(email, password, confirmPassword)" (click)="signUp(email, password)">登录</ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>

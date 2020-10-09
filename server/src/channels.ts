@@ -13,7 +13,7 @@ export default function(app: Application): void {
     app.channel('anonymous').join(connection);
   });
 
-  app.on('login', (authResult: any, { connection }: any): void => {
+  app.on('login', ( authResult: any, { connection }: any): void => {
     // connection can be undefined if there is no
     // real-time connection, e.g. when logging in via REST
     if(connection) {
@@ -60,7 +60,7 @@ export default function(app: Application): void {
   // app.service('users').publish('created', () => app.channel('admins'));
   
   // With the userid and email organization from above you can easily select involved users
-  app.service('ticks').publish((data, context) => {
+  app.service('ticks').publish((data: any, context: any) => {
     const channelName = `users/id/${context.params.user._id}`;
     return app.channel(channelName);
 
