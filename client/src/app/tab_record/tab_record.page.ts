@@ -84,12 +84,13 @@ export class TabRecordPage implements OnInit, OnDestroy {
     return this.formatter.duration(_endTime - tick.tickTime);
   }
 
-  async showModal(activity: string) {
+  async showModal(tickId: string) {
     const modal = await this.modal.create({
       component: ActivityPage,
       backdropDismiss: false,
       componentProps: {
-        activity
+        tickId,
+        ticks: this.ticks
       }
     });
 
@@ -103,7 +104,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
       event.target.parentElement.parentElement.close();
     }
 
-    const data = await this.showModal('');
+    const data = await this.showModal('new');
     if (data.action === 'ok') {
       const tickTime = afterTick ? afterTick.tickTime+1000 : Date.now();
       const tick = {
@@ -120,9 +121,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
       window.clearTimeout(this.editingTimer);
       this.editingTimer = null;
 
-      const tags = tick.tags.join(" #");
-      const activity = `${tick.activity} #${tags}`;
-      const data = await this.showModal(activity);
+      const data = await this.showModal(tick._id);
       if (data.action === 'ok') {
         await this.service.patch(tick._id, {
           activity: data.activity,
@@ -268,7 +267,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
   }
 
   trackByFn(index: number, item: Tick) {
-    return (item && item._id) ? item._id : item.tickTime;
+    return item._id || item.tickTime;
   }
 
   ngOnInit() {

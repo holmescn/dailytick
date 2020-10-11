@@ -1,14 +1,14 @@
-// Initializes the `activities` service on path `/activities`
+// Initializes the `activityTags` service on path `/activity-tags`
 import { ServiceAddons } from '@feathersjs/feathers';
 import { Application } from '../../declarations';
-import { Activities } from './activities.class';
-import createModel from '../../models/activities.model';
-import hooks from './activities.hooks';
+import { ActivityTags } from './activity-tags.class';
+import createModel from '../../models/activity-tags.model';
+import hooks from './activity-tags.hooks';
 
 // Add this service to the service type index
 declare module '../../declarations' {
   interface ServiceTypes {
-    'activities': Activities & ServiceAddons<any>;
+    'activity-tags': ActivityTags & ServiceAddons<any>;
   }
 }
 
@@ -19,10 +19,10 @@ export default function (app: Application): void {
   };
 
   // Initialize our service with any options it requires
-  app.use('/activities', new Activities(options, app));
+  app.use('/activity-tags', new ActivityTags(options, app));
 
   // Get our initialized service so that we can register hooks
-  const service = app.service('activities');
+  const service = app.service('activity-tags');
 
   service.hooks(hooks);
 }

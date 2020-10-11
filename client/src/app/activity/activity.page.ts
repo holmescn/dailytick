@@ -10,100 +10,134 @@ import { FeathersService } from '../services/feathers.service';
   styleUrls: ['./activity.page.scss'],
 })
 export class ActivityPage implements OnInit {
-  @Input() activity: string;
+  @Input() tickId: string;
+  @Input() ticks: Tick[];
 
+  tick: Tick;
   dblclickTimer: number = 0;
-  tags: string[];
-  recentActivities: string[];
-  freqActivities: string[];
+  suggestTags: string[] = [];
+  suggestActivities: string[] = [];
 
   constructor(private modal: ModalController, private feathers: FeathersService) { }
 
   async ngOnInit() {
-    const { data: activities } = await this.feathers.service("activities").find({
-      query: {
-        $sort: { freq: -1 },
-        $limit: 20,
-        $select: ["activity"]
+    if (this.tickId === 'new') {
+      this.tick = {
+        _id: 'new',
+        activity: '',
+        tags: [],
+        tickTime: 0
       }
-    });
-    this.freqActivities = activities.map(a => a.activity);
+      this.suggestActivities = await this.loadSuggestActivities();
+    } else {
+      this.tick = this.ticks.find(t => t._id === this.tickId);
+      this.suggestTags = await this.loadSuggestTags();
+    }
+  }
 
-    const { data: ticks } = await this.feathers.service("ticks").find({
+  async loadSuggestActivities(): Promise<string[]> {
+    const suggests: string[] = await this.feathers.service('suggest-activities').find({
       query: {
-        $sort: { tickTime: -1 },
-        $limit: 10,
-        $skip: 1,
-        $select: ['activity', 'tags']
+        now: Date.now()
       }
     });
-    this.recentActivities = ticks.map((t: Tick) => `${t.activity} #${t.tags.join(' #')}`).filter((text: string) => {
-      return activities.findIndex(a => a.activity === text) < 0;
-    });
-    if (this.recentActivities.length > 5) {
-        this.recentActivities = this.recentActivities.slice(0, 5);
+
+    for (let i = 0; i < Math.min(10, this.ticks.length); ++i) {
+      const tick = this.ticks[i];
+      if (suggests.indexOf(tick.activity) < 0) {
+        suggests.push(tick.activity);
+      }
     }
 
-    const tags: string[] = [];
-    const { data: freqTags } = await this.feathers.service("tags").find({
+    return suggests;
+  }
+
+  async loadSuggestTags(): Promise<string[]> {
+    const suggests: string[] = await this.feathers.service('activity-tags').find({
+      query: {
+        activity: this.tick.activity
+      }
+    });
+
+    const frequent: any[] = await this.feathers.service('tags').find({
       query: {
         $sort: { freq: -1 },
-        $limit: 15,
-        $select: ["tag"]
-      }
-    });
-    freqTags.forEach(tag => {
-      if (tags.indexOf(tag.tag) === -1) {
-        tags.push(tag.tag);
+        $limit: 10,
+        $select: ['tag']
       }
     });
 
-    ticks.forEach((tick: Tick) => {
-      tick.tags.forEach((tag: string) => {
-        if (tags.indexOf(tag) === -1) {
-          tags.push(tag);
+    for (const tag of frequent) {
+      if (suggests.indexOf(tag) < 0) {
+        suggests.push(tag);
+      }
+    }
+
+    for (let i = 0; i < Math.min(10, this.ticks.length); ++i) {
+      const tick = this.ticks[i];
+      for (const tag of tick.tags) {
+        if (suggests.indexOf(tick.activity) < 0) {
+          suggests.push(tick.activity);
         }
-      });
-    });
+      }
+    }
 
-    this.tags = tags;
+    return suggests;
+  }
+
+  text(tick: Tick): string {
+    if (tick.tags.length > 0) {
+      const tags = tick.tags.join(' #');
+      return `${tick.activity} #${tags}`;
+    } else {
+      return tick.activity;
+    }
   }
 
   onChange(event: any) {
-    this.activity = event.detail.value;
+    const value = event.detail.value;
+    const tags: string[] = [];
+    const activity = value.replace(/#[^#]+(\s+|$)/g, (tag) => {
+      tags.push(tag.substring(1).trim());
+      return '';
+    }).trim();
+    if (this.tick.activity !== activity) {
+      this.loadSuggestTags().then(tags => {
+        this.suggestTags = tags;
+      });
+    }
+    this.tick.tags = tags;
+    this.tick.activity = activity;
   }
 
   clickActivity(activity: string) {
     if (this.dblclickTimer) {
       window.clearTimeout(this.dblclickTimer);
       this.dblclickTimer = 0;
-      this.activity = activity;
+      this.tick.activity = activity;
+      this.tick.tags = [];
     } else {
       this.dblclickTimer = window.setTimeout(() => {
         this.dblclickTimer = 0;
-      }, 200);
+      }, 250);
     }
   }
 
   toggleTag(tag: string) {
-    if (this.activity.indexOf(`#${tag}`) >= 0) {
-      this.activity = this.activity.replace(new RegExp(`\\s*#${tag}`), '');
+    const index = this.tick.tags.indexOf(tag);
+    if (index >= 0) {
+      this.tick.tags.splice(index, 1);
     } else {
-      this.activity = `${this.activity} #${tag}`;
+      this.tick.tags.push(tag);
     }
   }
 
-  tagState(tag: string) {
-    return this.activity.indexOf(`#${tag}`) >= 0 ? 'solid' : "outline";
+  tagChecked(tag: string) {
+    return this.tick.tags.indexOf(tag) >= 0;
   }
 
   onOk(event) {
-    const tags: string[] = [];
-    const activity = this.activity.replace(/#[^#]+(\s+|$)/g, (tag) => {
-      tags.push(tag.substring(1).trim());
-      return '';
-    }).trim();
-    this.modal.dismiss({ action: 'ok', activity, tags });
+    this.modal.dismiss({ action: 'ok', activity: this.tick.activity, tags: this.tick.tags });
   }
 
   onCancel(event) {

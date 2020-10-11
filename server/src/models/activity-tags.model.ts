@@ -5,9 +5,12 @@ import { Application } from '../declarations';
 export default function (app: Application): NeDB<any>  {
   const dbPath = app.get('nedb');
   const Model = new NeDB({
-    filename: path.join(dbPath, 'suggest-tags.db'),
+    // filename: path.join(dbPath, 'activity-tags.db'),
+    inMemoryOnly: true,
     autoload: true
   });
+
+  Model.ensureIndex({ fieldName: 'activity', unique: true, sparse: true });
 
   return Model;
 }

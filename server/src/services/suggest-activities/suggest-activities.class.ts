@@ -9,24 +9,22 @@ export class SuggestActivities extends Service {
     this.app = app;
   }
 
-  find (params?: Params): Promise<any> {
-    if (params?.query?.now) {
+  find (params: Params): Promise<any> {
+    if (params.query?.now) {
       const now = new Date(params.query.now);
       return this.nearest(params, now);
     }
-    
-    return super.find({
-      ...params,
-      query: {
-        ...params?.query,
-        userId: params?.user._id
-      }
-    });
+
+    return super.find(Object.assign(params, {
+      query: Object.assign(params?.query, {
+        userId: params.user._id
+      })
+    }));
   }
 
-  create(data: Partial<any>, params?: Params): Promise<any> {
+  create(data: Partial<any>, params: Params): Promise<any> {
     return super.create(Object.assign(data, {
-      userId: params?.user._id
+      userId: params.user._id
     }), params);
   }
 
@@ -42,12 +40,16 @@ export class SuggestActivities extends Service {
     });
 
     if (candidates.length > 0) {
-      const t = now.getHours() * 100 + now.getMinutes();
+      const t = now.getUTCHours() * 60 + now.getUTCMinutes();
       return candidates.map((item: any) => Object.assign(item, {
         dt: Math.abs(t - item.time)
       })).sort(
-        (a, b) => a.dt === b.dt ? a.freq - b.freq : a.dt - b.dt
-      ).slice(0, Math.min(candidates.length, params.query?.$limit || 10));
+        (a, b) => Math.abs(a.dt - b.dt) > 5 ? a.dt - b.dt : b.freq - a.freq
+      ).slice(0,
+        Math.min(candidates.length, params.query?.$limit || 10)
+      ).filter(
+        (item: any) => item.freq >= 5
+      ).map((item: any) => item.activity);
     }
 
     await this.refresh(params);
@@ -72,7 +74,7 @@ export class SuggestActivities extends Service {
     const m = new Map<string, any>();
     for(const tick of ticks) {
       const t = new Date(tick.tickTime);
-      const time = t.getHours() * 100 + t.getMinutes();
+      const time = t.getUTCHours() * 60 + t.getUTCMinutes();
       if (m.has(tick.activity)) {
         const x = m.get(tick.activity);
         x.freq += 1;
@@ -91,11 +93,16 @@ export class SuggestActivities extends Service {
 
     for (const key of m.keys()) {
       const entry = m.get(key);
-      await this.create({
-        activity: entry.activity,
-        time: avg(entry.timeArray),
-        freq: entry.freq
-      });
+      if (entry.freq >= 5) {
+        await this.create({
+          activity: entry.activity,
+          time: avg(entry.timeArray),
+          freq: entry.freq
+        }, {
+          ...params,
+          provider: undefined
+        });
+      }
 
       /*
       if (entry.timeArray.length >= 5) {
