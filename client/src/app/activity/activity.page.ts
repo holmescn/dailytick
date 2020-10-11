@@ -11,6 +11,7 @@ import { FeathersService } from '../services/feathers.service';
 })
 export class ActivityPage implements OnInit {
   @Input() activity: string;
+
   dblclickTimer: number = 0;
   tags: string[];
   recentActivities: string[];

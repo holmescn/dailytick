@@ -1,4 +1,3 @@
-import { response } from '@feathersjs/express';
 import { Params } from '@feathersjs/feathers';
 import { Service, NedbServiceOptions } from 'feathers-nedb';
 import { Application } from '../../declarations';

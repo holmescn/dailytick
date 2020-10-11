@@ -14,8 +14,11 @@ export class Ticks extends Service {
     if (typeof params?.query?.tickTime === 'string') {
       switch(params.query.tickTime) {
       case 'today': return await this.todayTicks(params, params.query.now);
+      case 'yesterday': return await this.yesterdayTicks(params, params.query.now);
       case 'this-week': return await this.thisWeekTicks(params, params.query.now);
+      case 'last-week': return await this.lastWeekTicks(params, params.query.now);
       case 'this-month': return await this.thisMonthTicks(params, params.query.now);
+      case 'last-month': return await this.lastMonthTicks(params, params.query.now);
       case 'custom': return await this.customTimeTicks(params);
       default: return [];
       }
@@ -31,7 +34,7 @@ export class Ticks extends Service {
   }
 
   async findBetween(startTime: number, endTime: number, params: Params): Promise<any[]> {
-    const $select = ['activity', 'tickTime', 'tags'];
+    const columns = ['activity', 'tickTime', 'tags'];
     const ticks = await this._find({
       ...params,
       provider: undefined,
@@ -42,7 +45,7 @@ export class Ticks extends Service {
           $lte: endTime
         },
         $sort: { tickTime: 1 },
-        $select
+        $select: columns,
       }
     });
 
@@ -52,9 +55,9 @@ export class Ticks extends Service {
       paginate: false,
       query: {
         tickTime: { $lt: startTime },
-        $sort: { tickTime: 1 },
+        $sort: { tickTime: -1 },
         $limit: 1,
-        $select
+        $select: columns,
       }
     });
   
@@ -66,7 +69,7 @@ export class Ticks extends Service {
         tickTime: { $gt: endTime },
         $sort: { tickTime: 1 },
         $limit: 1,
-        $select
+        $select: columns,
       }
     });
 
@@ -80,6 +83,17 @@ export class Ticks extends Service {
     const D = t0.getDate();
     const startTime = new Date(Y, M, D);
     const endTime = new Date(Y, M, D+1);
+  
+    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
+  }
+
+  async yesterdayTicks(params: Params, now: number): Promise<any> {
+    const t0 = new Date(now);
+    const Y = t0.getFullYear();
+    const M = t0.getMonth();
+    const D = t0.getDate();
+    const startTime = new Date(Y, M, D-1);
+    const endTime = new Date(Y, M, D);
   
     return this.findBetween(startTime.getTime(), endTime.getTime(), params);
   }
@@ -101,6 +115,23 @@ export class Ticks extends Service {
     return this.findBetween(startTime.getTime(), endTime.getTime(), params);
   }
 
+  async lastWeekTicks(params: Params, now: number): Promise<any> {
+    const t0 = new Date(now);
+    const Y = t0.getFullYear();
+    const M = t0.getMonth();
+    const D = t0.getDate();
+    const startTime = new Date(Y, M, D);
+    if (startTime.getDay() > 1) {
+      startTime.setDate(startTime.getDate() - startTime.getDay() + 1 - 7);
+    }
+    const endTime = new Date(Y, M, D);
+    if (endTime.getDay() > 0) {
+      endTime.setDate(endTime.getDate() - endTime.getDay() + 1);
+    }
+  
+    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
+  }
+
   async thisMonthTicks(params: Params, now: number): Promise<any> {
     const t0 = new Date(now);
     const Y = t0.getFullYear();
@@ -108,6 +139,16 @@ export class Ticks extends Service {
     const D = t0.getDate();
     const startTime = new Date(Y, M, 1);
     const endTime = new Date(Y, M+1, 1);
+    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
+  }
+
+  async lastMonthTicks(params: Params, now: number): Promise<any> {
+    const t0 = new Date(now);
+    const Y = t0.getFullYear();
+    const M = t0.getMonth();
+    const D = t0.getDate();
+    const startTime = new Date(Y, M-1, 1);
+    const endTime = new Date(Y, M, 1);
     return this.findBetween(startTime.getTime(), endTime.getTime(), params);
   }
 

@@ -1,37 +1,55 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-segment (ionChange)="segmentChanged($event)" [value]="segment">
-      <ion-segment-button value="today">
-        <ion-label>今天</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="this-week">
-        <ion-label>本周</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="this-month">
-        <ion-label>本月</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="custom">
-        <ion-label>自定义</ion-label>
-      </ion-segment-button>
-    </ion-segment>
+    <ion-title>日常统计</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <ion-list>
+    <ion-item>
+      <ion-label>选择时间</ion-label>
+      <ion-select [value]="time" (ionChange)="onSelectChanged($event)">
+        <ion-select-option value="today">今天</ion-select-option>
+        <ion-select-option value="yesterday">昨天</ion-select-option>
+        <ion-select-option value="this-week">本周</ion-select-option>
+        <ion-select-option value="last-week">上周</ion-select-option>
+        <ion-select-option value="this-month">本月</ion-select-option>
+        <ion-select-option value="last-month">上月</ion-select-option>
+        <ion-select-option value="custom">自定义</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item-group *ngIf="time === 'custom'">
+      <ion-item>
+        <ion-label>开始时间</ion-label>
+        <ion-datetime></ion-datetime>
+      </ion-item>
+      <ion-item>
+        <ion-label>结束时间</ion-label>
+        <ion-datetime></ion-datetime>
+      </ion-item>
+      <ion-item>
+        <ion-grid>
+          <ion-row>
+            <ion-col>
+              <ion-button size="default" expand="full">确定</ion-button>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-item>
+    </ion-item-group>
     <ion-item-divider>
       <ion-label>活动统计</ion-label>
     </ion-item-divider>
-    <ion-item>
-      <ion-label>十一假期</ion-label>
-      <ion-note slot="end">1h 1m</ion-note>
+    <ion-item *ngFor="let a of activityS">
+      <ion-label>{{ a.text }}</ion-label>
+      <ion-note slot="end">{{ formatDuration(a.duration) }}</ion-note>
     </ion-item>
     <ion-item-divider>
       <ion-label>标签统计</ion-label>
     </ion-item-divider>
-    <ion-item>
-      <ion-label>#工作</ion-label>
-      <ion-note slot="end">1h 1m</ion-note>
+    <ion-item *ngFor="let t of tagS">
+      <ion-label>#{{ t.text }}</ion-label>
+      <ion-note slot="end">{{ formatDuration(t.duration) }}</ion-note>
     </ion-item>
   </ion-list>
 </ion-content>

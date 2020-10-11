@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { FeathersService } from '../services/feathers.service';
 
 @Component({
   selector: 'app-tab_settings',
@@ -7,7 +9,7 @@ import { Component } from '@angular/core';
 })
 export class TabSettingsPage {
   darkTheme: boolean;
-  constructor() {
+  constructor(private feathers: FeathersService) {
     const theme = localStorage.getItem('theme');
     this.darkTheme = theme === 'dark';
   }
@@ -21,5 +23,16 @@ export class TabSettingsPage {
       document.body.classList.remove('dark');
     }
     this.darkTheme = event.detail.checked;
+  }
+
+  async exportDailyDetails(event: CustomEvent) {
+    const response = await this.feathers.service("export-csv").get('daily-details');
+    console.log(response);
+    if (response.code === 0) {
+      const url = (environment.production
+                  ? `${environment.serverUrl}/download/${response.filename}`
+                  : `${environment.serverUrl}/${response.filename}`);
+      window.open(url, '_blank');
+    }
   }
 }
