@@ -1,6 +1,13 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>日常统计</ion-title>
+    <ion-segment (ionChange)="segmentChanged($event)" [value]="segment">
+      <ion-segment-button value="activities">
+        <ion-label>活动</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="tags">
+        <ion-label>标签</ion-label>
+      </ion-segment-button>
+    </ion-segment>
   </ion-toolbar>
 </ion-header>
 
@@ -37,19 +44,23 @@
         </ion-grid>
       </ion-item>
     </ion-item-group>
-    <ion-item-divider>
-      <ion-label>活动统计</ion-label>
-    </ion-item-divider>
-    <ion-item *ngFor="let a of activityS">
-      <ion-label>{{ a.text }}</ion-label>
-      <ion-note slot="end">{{ formatDuration(a.duration) }}</ion-note>
-    </ion-item>
-    <ion-item-divider>
-      <ion-label>标签统计</ion-label>
-    </ion-item-divider>
-    <ion-item *ngFor="let t of tagS">
-      <ion-label>#{{ t.text }}</ion-label>
-      <ion-note slot="end">{{ formatDuration(t.duration) }}</ion-note>
-    </ion-item>
+    <ion-item-group *ngIf="segment === 'activities'">
+      <ion-item-divider>
+        <ion-label>活动统计</ion-label>
+      </ion-item-divider>
+      <ion-item *ngFor="let a of activityS">
+        <ion-label>{{ a.text }}</ion-label>
+        <ion-note slot="end">{{ formatDuration(a.duration) }}</ion-note>
+      </ion-item>
+    </ion-item-group>
+    <ion-item-group *ngIf="segment === 'tags'">
+      <ion-item-divider>
+        <ion-label>标签统计</ion-label>
+      </ion-item-divider>
+      <ion-item *ngFor="let t of tagS">
+        <ion-label>#{{ t.text }}</ion-label>
+        <ion-note slot="end">{{ formatDuration(t.duration) }}</ion-note>
+      </ion-item>
+    </ion-item-group>
   </ion-list>
 </ion-content>

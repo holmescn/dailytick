@@ -13,11 +13,11 @@
       <ion-label>夜间模式</ion-label>
       <ion-toggle slot="end" [checked]="darkTheme" (ionChange)="changeTheme($event)"></ion-toggle>
     </ion-item>
+    <ion-item (click)="exportDailyDetails($event)">
+      <ion-label>导出每日记录</ion-label>
+    </ion-item>
     <ion-item>
       <ion-label>在桌面创建图标</ion-label>
-    </ion-item>
-    <ion-item button=“true” (click)="exportDailyDetails($event)">
-      <ion-label>导出每日记录</ion-label>
     </ion-item>
   </ion-list>
 </ion-content>

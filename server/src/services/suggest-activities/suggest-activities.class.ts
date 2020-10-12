@@ -29,18 +29,17 @@ export class SuggestActivities extends Service {
   }
 
   async nearest(params: Params, now: Date): Promise<any[]> {
+    const t = this.round(now.getUTCHours() * 60 + now.getUTCMinutes());
     const candidates: any[] = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
       query: {
-        freq: { $gt: 0 },
-        $sort: { time: 1 },
+        time: t,
       }
     });
 
     if (candidates.length > 0) {
-      const t = now.getUTCHours() * 60 + now.getUTCMinutes();
       return candidates.map((item: any) => Object.assign(item, {
         dt: Math.abs(t - item.time)
       })).sort(
@@ -74,7 +73,7 @@ export class SuggestActivities extends Service {
     const m = new Map<string, any>();
     for(const tick of ticks) {
       const t = new Date(tick.tickTime);
-      const time = t.getUTCHours() * 60 + t.getUTCMinutes();
+      const time = this.round(t.getUTCHours() * 60 + t.getUTCMinutes());
       if (m.has(tick.activity)) {
         const x = m.get(tick.activity);
         x.freq += 1;
@@ -116,5 +115,9 @@ export class SuggestActivities extends Service {
       }
       */
     }
+  }
+
+  round(t: number): number {
+    return t - t % 10;
   }
 }

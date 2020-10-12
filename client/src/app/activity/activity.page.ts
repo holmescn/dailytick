@@ -14,6 +14,7 @@ export class ActivityPage implements OnInit {
   @Input() ticks: Tick[];
 
   tick: Tick;
+  disableInput = false;
   dblclickTimer: number = 0;
   suggestTags: string[] = [];
   suggestActivities: string[] = [];
@@ -98,30 +99,30 @@ export class ActivityPage implements OnInit {
     }
   }
 
-  onChange(event: any) {
+  async onChange(event: any) {
+    this.disableInput = true;
     const value = event.detail.value;
     const tags: string[] = [];
-    const activity = value.replace(/#[^#]+(\s+|$)/g, (tag) => {
+    const activity = value.replace(/#[^#]+(\s+|$)/g, (tag: string) => {
       tags.push(tag.substring(1).trim());
       return '';
     }).trim();
     if (this.tick.activity !== activity) {
-      this.loadSuggestTags().then(tags => {
-        this.suggestTags = tags;
-      });
+      this.suggestTags = await this.loadSuggestTags();
     }
     this.tick.tags = tags;
     this.tick.activity = activity;
+    this.disableInput = false;
   }
 
-  clickActivity(activity: string) {
+  async clickActivity(activity: string) {
     if (this.dblclickTimer) {
       window.clearTimeout(this.dblclickTimer);
       this.dblclickTimer = 0;
+      this.disableInput = true;
       this.tick.activity = activity;
-      this.loadSuggestTags().then(tags => {
-        this.suggestTags = tags;
-      });
+      this.suggestTags = await this.loadSuggestTags();
+      this.disableInput = false;
     } else {
       this.dblclickTimer = window.setTimeout(() => {
         this.dblclickTimer = 0;

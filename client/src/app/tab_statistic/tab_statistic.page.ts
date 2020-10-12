@@ -7,14 +7,19 @@ import { FeathersService } from '../services/feathers.service';
   styleUrls: ['tab_statistic.page.scss']
 })
 export class TabStatisticPage implements OnInit {
-  // time: string = "today";
-  time: string = "this-week";
+  time: string = "today";
+  // time: string = "this-week";
   items: any[] = [];
   activityS: any[] = [];
   tagS: any[] = [];
+  segment: string = 'activities';
 
   constructor(private feathers: FeathersService) {
 
+  }
+
+  segmentChanged(event) {
+    this.segment = event.detail.value;
   }
 
   onSelectChanged(event: CustomEvent) {
@@ -52,7 +57,7 @@ export class TabStatisticPage implements OnInit {
     const h = Math.floor(duration / 3600);
     const m = Math.floor(duration % 3600 / 60);
     const s = Math.floor(duration % 3600 % 60);
-    return h > 0 ? `${h}h ${m}m` : `${m}m ${s}s`;
+    return h > 0 ? `${h}h ${m}m` : (s > 35 ? `${m+1}m` : `${m}m`);
   }
 
   activityStatistic(data: any[]) {
