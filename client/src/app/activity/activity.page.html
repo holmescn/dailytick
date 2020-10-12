@@ -23,10 +23,10 @@
 <ion-content [fullscreen]="true">
   <ion-list>
     <ion-list-header *ngIf="tick.activity.length === 0">
-      <ion-label>双击选择活动</ion-label>
+      <ion-label class="list-header-text">双击选择活动</ion-label>
     </ion-list-header>
     <ion-list-header *ngIf="tick.activity.length > 0">
-      <ion-label>选择标签</ion-label>
+      <ion-label class="list-header-text">选择标签</ion-label>
     </ion-list-header>
     <ion-item-group *ngIf="tick.activity.length === 0">
       <ion-item *ngFor="let a of suggestActivities">
@@ -34,9 +34,9 @@
       </ion-item>
     </ion-item-group>
     <ion-item-group *ngIf="tick.activity.length > 0">
-      <ion-item *ngFor="let tag of suggestTags" (click)="toggleTag(tag)" [button]="true">
+      <ion-item *ngFor="let tag of suggestTags" (click)="toggleTag(tag)">
         <ion-label>{{ tag }}</ion-label>
-        <ion-note slot="end">{{ tagChecked(tag) ? 'Y' : '' }}</ion-note>
+        <ion-icon slot="end" name="checkmark-outline" *ngIf="tagChecked(tag)"></ion-icon>
       </ion-item>
     </ion-item-group>
   </ion-list>

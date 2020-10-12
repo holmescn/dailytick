@@ -67,13 +67,20 @@ export class ActivityTags extends Service {
     for (const entry of m.values()) {
       const tags = [...entry.tags];
 
-      await this._create({
-        activity: entry.activity,
-        tags
-      }, {
-        ...params,
-        provider: undefined
-      });
+      try {
+        await this._create({
+          activity: entry.activity,
+          tags
+        }, {
+          ...params,
+          provider: undefined
+        });
+      } catch (e) {
+        if (e.errorType === 'uniqueViolated') {
+          continue;
+        }
+        console.error('create failed:', e);
+      }
     }
 
     const activity = params.query?.activity;

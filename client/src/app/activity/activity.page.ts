@@ -59,7 +59,11 @@ export class ActivityPage implements OnInit {
       }
     });
 
-    const frequent: any[] = await this.feathers.service('tags').find({
+    if (this.tick.tags.length === 0) {
+      this.tick.tags = [...suggests];
+    }
+
+    const { data: frequent } = await this.feathers.service('tags').find({
       query: {
         $sort: { freq: -1 },
         $limit: 10,
@@ -67,17 +71,17 @@ export class ActivityPage implements OnInit {
       }
     });
 
-    for (const tag of frequent) {
-      if (suggests.indexOf(tag) < 0) {
-        suggests.push(tag);
+    for (const item of frequent) {
+      if (suggests.indexOf(item.tag) < 0) {
+        suggests.push(item.tag);
       }
     }
 
     for (let i = 0; i < Math.min(10, this.ticks.length); ++i) {
       const tick = this.ticks[i];
       for (const tag of tick.tags) {
-        if (suggests.indexOf(tick.activity) < 0) {
-          suggests.push(tick.activity);
+        if (suggests.indexOf(tag) < 0) {
+          suggests.push(tag);
         }
       }
     }
@@ -115,7 +119,9 @@ export class ActivityPage implements OnInit {
       window.clearTimeout(this.dblclickTimer);
       this.dblclickTimer = 0;
       this.tick.activity = activity;
-      this.tick.tags = [];
+      this.loadSuggestTags().then(tags => {
+        this.suggestTags = tags;
+      });
     } else {
       this.dblclickTimer = window.setTimeout(() => {
         this.dblclickTimer = 0;

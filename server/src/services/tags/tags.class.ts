@@ -63,12 +63,13 @@ export class Tags extends Service {
     });
 
     // tags 全都收录
-    await Promise.all([...m.entries()].map(entry => this.create({
+    await Promise.all([...m.entries()].map(entry => this.patch(null, {
       tag: entry[0],
       freq: entry[1]
     }, {
       ...params,
-      provider: undefined
+      provider: undefined,
+      nedb: { upsert: true }
     })));
   }
 }
