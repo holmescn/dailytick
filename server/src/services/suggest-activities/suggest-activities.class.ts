@@ -2,16 +2,20 @@ import { Params } from '@feathersjs/feathers';
 import { Service, NedbServiceOptions } from 'feathers-nedb';
 import { Application } from '../../declarations';
 
+interface Activity {
+  text: string,
+  freq: number
+}
+
 interface Bucket {
-  bucket: number,
-  activities: {
-    text: string,
-    freq: number
-  }[]
+  timeBucket: number,
+  activities: Activity[]
 }
 
 export class SuggestActivities extends Service {
   app: Application;
+  roundTo = 10;
+
   constructor(options: Partial<NedbServiceOptions>, app: Application) {
     super(options);
     this.app = app;
@@ -19,8 +23,7 @@ export class SuggestActivities extends Service {
 
   find (params: Params): Promise<any> {
     if (params.query?.now) {
-      const bucket = this.timeBucket(params.query.now);
-      return this.activitiesInBucket(params, bucket);
+      return this.activitiesInBucket(params, params.query.now);
     }
 
     return super.find(Object.assign(params, {
@@ -30,34 +33,88 @@ export class SuggestActivities extends Service {
     }));
   }
 
-  create(data: Partial<any>, params: Params): Promise<any> {
-    return super.create(Object.assign(data, {
-      userId: params.user._id
-    }), params);
+  sortFn(a: Activity, b: Activity): number {
+    return b.freq - a.freq;
   }
 
-  async activitiesInBucket(params: Params, bucket: number): Promise<string[]> {
-    const found: Bucket[] = await this.find({
+  filterFn(a: Activity): boolean {
+    return a.freq > 1;
+  }
+
+  mapFn(a: Activity): string {
+    return a.text;
+  }
+
+  async activitiesInBucket(params: Params, now: number): Promise<string[]> {
+    const bucket = this.timeBucket(now);
+    const found: string[] = [];
+
+    const f0: Bucket[] = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
       query: {
-        bucket,
+        timeBucket: bucket,
+        $limit: 1
       }
     });
 
+    if (f0.length > 0) {
+      const activities = f0[0].activities.filter(this.filterFn).sort(this.sortFn);
+      for (const a of activities) {
+        if (found.indexOf(a.text) < 0) {
+          found.push(a.text);
+        }
+      }
+    }
+  
+    const f1: Bucket[] = await this.find({
+      ...params,
+      provider: undefined,
+      paginate: false,
+      query: {
+        timeBucket: { $lt: bucket },
+        $limit: 1
+      }
+    });
+
+    if (f1.length > 0) {
+      const activities = f1[0].activities.filter(this.filterFn).sort(this.sortFn);
+      for (const a of activities) {
+        if (found.indexOf(a.text) < 0) {
+          found.push(a.text);
+        }
+      }
+    }
+
+    const f2: Bucket[] = await this.find({
+      ...params,
+      provider: undefined,
+      paginate: false,
+      query: {
+        timeBucket: { $gt: bucket },
+        $limit: 1
+      }
+    });
+
+    if (f2.length > 0) {
+      const activities = f2[0].activities.filter(this.filterFn).sort(this.sortFn);
+      for (const a of activities) {
+        if (found.indexOf(a.text) < 0) {
+          found.push(a.text);
+        }
+      }
+    }
+
     if (found.length > 0) {
-      const activities = found[0].activities;
-      return activities!.sort(
-        (a: any, b: any) => a.freq - b.freq
-      ).map(v => v.text);
+      return found;
     }
 
     return await this.refresh(params, bucket);
   }
 
   async refresh(params: Params, bucket: number): Promise<string[]> {
-    const ticks: any[] = await this.app.service('ticks')._find({
+    const ticks: {activity: string, tickTime: number}[] = await this.app.service('ticks')._find({
       ...params,
       provider: undefined,
       paginate: false,
@@ -68,47 +125,60 @@ export class SuggestActivities extends Service {
       }
     });
 
-    const m = new Map<number, any[]>();
+    const m = new Map<number, {text: string, freq: number}[]>();
     for(const tick of ticks) {
-      const b = this.timeBucket(tick.tickTime);
-      if (m.has(b)) {
-        const activities = m.get(b);
-        const index = activities!.findIndex((t: any) => t.text === tick.activity);
-        if (index < 0) {
-          activities!.push({ text: tick.activity, freq: 1 });
-        } else {
-          activities![index].freq += 1;
+      const timeBucket = this.timeBucket(tick.tickTime);
+      if (m.has(timeBucket)) {
+        const activities = m.get(timeBucket);
+        if (activities) {
+          const index = activities.findIndex(t => t.text === tick.activity);
+          if (index < 0) {
+            activities.push({ text: tick.activity, freq: 1 });
+          } else {
+            activities[index]['freq'] += 1;
+          }
+          m.set(timeBucket, activities);
         }
-        m.set(b, activities!);
       } else {
-        m.set(b, [{ text: tick.activity, freq: 1 }]);
+        m.set(timeBucket, [{
+          text: tick.activity,
+          freq: 1
+        }]);
       }
     }
 
-    for (const key of m.keys()) {
-      const activities = m.get(key);
-      await this._patch(null, {
-        bucket: key,
-        activities: { $set: activities! }
-      }, {
-        ...params,
-        provider: undefined,
-        nedb: { upsert: true }
-      });
+    const db = this.getModel(params);
+    for (const timeBucket of m.keys()) {
+      const activities = m.get(timeBucket);
+      if (activities) {
+        db.update({
+          timeBucket
+        }, {
+          $set: {
+            userId: params.user._id,
+            timeBucket,
+            activities: activities.sort(this.sortFn)
+          }
+        }, {
+          upsert: true
+        }, (err: Error|null) => {
+          if (err) console.log(err);
+        });
+      }
     }
 
     if (m.has(bucket)) {
       const activities = m.get(bucket);
-      return activities!.sort(
-        (a: any, b: any) => a.freq - b.freq
-      ).map(v => v.activity);
+      if (activities) {
+        return activities.filter(this.filterFn).sort(this.sortFn).map(this.mapFn);
+      }
     }
     return [];
   }
 
-  timeBucket(ts: number, roundTo=10): number {
+  timeBucket(ts: number): number {
     const t = new Date(ts);
     const minutes = t.getUTCHours() * 60 + t.getUTCMinutes();
-    return minutes - minutes % roundTo;
+    return minutes - minutes % this.roundTo;
   }
 }

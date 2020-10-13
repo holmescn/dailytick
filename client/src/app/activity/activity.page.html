@@ -7,7 +7,7 @@
     </ion-buttons>
     <ion-input
       type="text"
-      debounce="200"
+      debounce="1500"
       enterkeyhint="done"
       placeholder="描述 #标签"
       [disabled]="disableInput"
@@ -24,7 +24,7 @@
 <ion-content [fullscreen]="true">
   <ion-list>
     <ion-list-header *ngIf="tick.activity.length === 0">
-      <ion-label class="list-header-text">双击选择活动</ion-label>
+      <ion-label class="list-header-text">选择活动</ion-label>
     </ion-list-header>
     <ion-list-header *ngIf="tick.activity.length > 0">
       <ion-label class="list-header-text">选择标签</ion-label>

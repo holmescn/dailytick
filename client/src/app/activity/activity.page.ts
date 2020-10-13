@@ -15,7 +15,6 @@ export class ActivityPage implements OnInit {
 
   tick: Tick;
   disableInput = false;
-  dblclickTimer: number = 0;
   suggestTags: string[] = [];
   suggestActivities: string[] = [];
 
@@ -115,19 +114,14 @@ export class ActivityPage implements OnInit {
     this.disableInput = false;
   }
 
-  async clickActivity(activity: string) {
-    if (this.dblclickTimer) {
-      window.clearTimeout(this.dblclickTimer);
-      this.dblclickTimer = 0;
-      this.disableInput = true;
-      this.tick.activity = activity;
-      this.suggestTags = await this.loadSuggestTags();
+  clickActivity(activity: string) {
+    this.disableInput = true;
+    this.tick.activity = activity;
+    this.loadSuggestTags().then(tags => {
+      this.suggestTags = tags;
+    }).finally(() => {
       this.disableInput = false;
-    } else {
-      this.dblclickTimer = window.setTimeout(() => {
-        this.dblclickTimer = 0;
-      }, 250);
-    }
+    });
   }
 
   toggleTag(tag: string) {
