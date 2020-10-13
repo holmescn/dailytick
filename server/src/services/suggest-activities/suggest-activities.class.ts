@@ -2,6 +2,14 @@ import { Params } from '@feathersjs/feathers';
 import { Service, NedbServiceOptions } from 'feathers-nedb';
 import { Application } from '../../declarations';
 
+interface Bucket {
+  bucket: number,
+  activities: {
+    text: string,
+    freq: number
+  }[]
+}
+
 export class SuggestActivities extends Service {
   app: Application;
   constructor(options: Partial<NedbServiceOptions>, app: Application) {
@@ -11,8 +19,8 @@ export class SuggestActivities extends Service {
 
   find (params: Params): Promise<any> {
     if (params.query?.now) {
-      const now = new Date(params.query.now);
-      return this.nearest(params, now);
+      const bucket = this.timeBucket(params.query.now);
+      return this.activitiesInBucket(params, bucket);
     }
 
     return super.find(Object.assign(params, {
@@ -28,37 +36,27 @@ export class SuggestActivities extends Service {
     }), params);
   }
 
-  async nearest(params: Params, now: Date): Promise<any[]> {
-    const t = this.round(now.getUTCHours() * 60 + now.getUTCMinutes());
-    const candidates: any[] = await this.find({
+  async activitiesInBucket(params: Params, bucket: number): Promise<string[]> {
+    const found: Bucket[] = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
       query: {
-        time: t,
+        bucket,
       }
     });
 
-    if (candidates.length > 0) {
-      return candidates.map((item: any) => Object.assign(item, {
-        dt: Math.abs(t - item.time)
-      })).sort(
-        (a, b) => Math.abs(a.dt - b.dt) > 5 ? a.dt - b.dt : b.freq - a.freq
-      ).slice(0,
-        Math.min(candidates.length, params.query?.$limit || 10)
-      ).filter(
-        (item: any) => item.freq >= 5
-      ).map((item: any) => item.activity);
+    if (found.length > 0) {
+      const activities = found[0].activities;
+      return activities!.sort(
+        (a: any, b: any) => a.freq - b.freq
+      ).map(v => v.text);
     }
 
-    await this.refresh(params);
-    return await this.find({
-      ...params,
-      provider: undefined
-    });
+    return await this.refresh(params, bucket);
   }
 
-  async refresh(params: Params): Promise<void> {
+  async refresh(params: Params, bucket: number): Promise<string[]> {
     const ticks: any[] = await this.app.service('ticks')._find({
       ...params,
       provider: undefined,
@@ -70,54 +68,47 @@ export class SuggestActivities extends Service {
       }
     });
 
-    const m = new Map<string, any>();
+    const m = new Map<number, any[]>();
     for(const tick of ticks) {
-      const t = new Date(tick.tickTime);
-      const time = this.round(t.getUTCHours() * 60 + t.getUTCMinutes());
-      if (m.has(tick.activity)) {
-        const x = m.get(tick.activity);
-        x.freq += 1;
-        x.timeArray.push(time);
-        m.set(tick.activity, x);
+      const b = this.timeBucket(tick.tickTime);
+      if (m.has(b)) {
+        const activities = m.get(b);
+        const index = activities!.findIndex((t: any) => t.text === tick.activity);
+        if (index < 0) {
+          activities!.push({ text: tick.activity, freq: 1 });
+        } else {
+          activities![index].freq += 1;
+        }
+        m.set(b, activities!);
       } else {
-        m.set(tick.activity, {
-          activity: tick.activity,
-          timeArray: [time],
-          freq: 1,
-        });
+        m.set(b, [{ text: tick.activity, freq: 1 }]);
       }
     }
-
-    const avg = (array: number[]) => array.reduce((a, v) => a + v, 0) / array.length;
 
     for (const key of m.keys()) {
-      const entry = m.get(key);
-      if (entry.freq >= 5) {
-        await this.create({
-          activity: entry.activity,
-          time: avg(entry.timeArray),
-          freq: entry.freq
-        }, {
-          ...params,
-          provider: undefined
-        });
-      }
-
-      /*
-      if (entry.timeArray.length >= 5) {
-        let timeArray: number[] = [...entry.timeArray];
-        let changed = false;
-        do {
-          const avg = timeArray.reduce((a, v) => a+v, 0) / timeArray.length;
-          const std = Math.sqrt(timeArray.reduce((a, v) => a + (v - avg) * (v - avg), 0) / timeArray.length);
-          
-        } while (changed);
-      }
-      */
+      const activities = m.get(key);
+      await this._patch(null, {
+        bucket: key,
+        activities: { $set: activities! }
+      }, {
+        ...params,
+        provider: undefined,
+        nedb: { upsert: true }
+      });
     }
+
+    if (m.has(bucket)) {
+      const activities = m.get(bucket);
+      return activities!.sort(
+        (a: any, b: any) => a.freq - b.freq
+      ).map(v => v.activity);
+    }
+    return [];
   }
 
-  round(t: number): number {
-    return t - t % 10;
+  timeBucket(ts: number, roundTo=10): number {
+    const t = new Date(ts);
+    const minutes = t.getUTCHours() * 60 + t.getUTCMinutes();
+    return minutes - minutes % roundTo;
   }
 }

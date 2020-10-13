@@ -141,7 +141,7 @@ export class ExportCsv implements Partial<ServiceMethods<Data>> {
   }
 
   async findAllTicks(params?: Params): Promise<Tick[]> {
-    return (await this.app.service('ticks').find({
+    const ticks = await this.app.service('ticks').find({
       ...params,
       provider: undefined,
       paginate: false,
@@ -150,7 +150,9 @@ export class ExportCsv implements Partial<ServiceMethods<Data>> {
         $sort: { tickTime: 1 },
         $select: ['activity', 'tags', 'tickTime']
       }
-    })).map((item: any, index: number, items: any[]) => Object.assign(item, {
+    });
+
+    return ticks.map((item: any, index: number, items: any[]) => Object.assign(item, {
       endTime: (index+1<items.length ? items[index+1].tickTime : Date.now()),
     }));
   }

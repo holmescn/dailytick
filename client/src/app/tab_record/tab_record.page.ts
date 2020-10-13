@@ -45,10 +45,17 @@ export class TabRecordPage implements OnInit, OnDestroy {
     const service = this.feathers.service("ticks");
     service.on('created', (tick: Tick) => {
       const index = this.ticks.findIndex(t => t.tickTime < tick.tickTime);
-      this.ticks.splice(index, 0, Object.assign(tick, {
+      const _tick = Object.assign(tick, {
         _date: this.formatter.date(tick.tickTime)
-      }));
-      this.ticks = [...this.ticks];
+      });
+      if (index < 0) {
+        this.ticks.unshift(_tick);
+        // this.virtualScroll.checkRange(0, this.ticks.length);
+      } else {
+        this.ticks.splice(index, 0, _tick);
+        // this.ticks = [...this.ticks];
+      }
+      this.virtualScroll.checkRange(0, this.ticks.length);
     });
     service.on('updated', (tick: Tick) => {
       const index = this.ticks.findIndex(_tick => _tick._id === tick._id);
@@ -104,9 +111,9 @@ export class TabRecordPage implements OnInit, OnDestroy {
       event.target.parentElement.parentElement.close();
     }
 
+    const tickTime = afterTick ? afterTick.tickTime+1000 : Date.now();
     const data = await this.showModal('new');
     if (data.action === 'ok') {
-      const tickTime = afterTick ? afterTick.tickTime+1000 : Date.now();
       const tick = {
         activity: data.activity,
         tags: data.tags,
