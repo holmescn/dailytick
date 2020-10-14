@@ -10,10 +10,7 @@ export default {
     all: [ authenticate('jwt') ],
     find: [],
     get: [ disallow('external') ],
-    create: [
-      disallow('external'),
-      setTimestamp('createdAt')
-    ],
+    create: [ disallow('external') ],
     update: [ disallow('external') ],
     patch: [ disallow('external') ],
     remove: [ disallow('external') ]

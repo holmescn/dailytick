@@ -53,6 +53,7 @@
     "feathers-hooks-common": "^5.0.4",
     "feathers-memory": "^4.1.0",
     "feathers-nedb": "^5.1.0",
+    "fuse.js": "^6.4.1",
     "helmet": "^3.23.3",
     "nedb": "^1.8.0",
     "serve-favicon": "^2.5.0",

@@ -8,7 +8,6 @@ import { FeathersService } from '../services/feathers.service';
 })
 export class TabStatisticPage implements OnInit {
   time: string = "today";
-  // time: string = "this-week";
   items: any[] = [];
   activityS: any[] = [];
   tagS: any[] = [];
@@ -36,8 +35,8 @@ export class TabStatisticPage implements OnInit {
   }
 
   loadData(type: string) {
-    this.feathers.service('ticks').find({
-      query: { tickTime: type, now: Date.now() }
+    this.feathers.service('ticks').get(type, {
+      query: { now: Date.now() }
     }).then((items: any[]) => {
       this.items = this.addDuration(items);
       this.activityS = this.activityStatistic(this.items);

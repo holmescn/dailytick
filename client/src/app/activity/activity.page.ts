@@ -1,6 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { tick } from '@angular/core/testing';
-import { ModalController } from '@ionic/angular';
+import { IonInput, ModalController } from '@ionic/angular';
 import { Tick } from '../interfaces/tick';
 import { FeathersService } from '../services/feathers.service';
 
@@ -12,6 +12,7 @@ import { FeathersService } from '../services/feathers.service';
 export class ActivityPage implements OnInit {
   @Input() tickId: string;
   @Input() ticks: Tick[];
+  @ViewChild(IonInput) inputBox: IonInput;
 
   tick: Tick;
   disableInput = false;
@@ -60,7 +61,7 @@ export class ActivityPage implements OnInit {
     });
 
     if (this.tick.tags.length === 0) {
-      this.tick.tags = [...suggests];
+      this.tick.tags = [...this.tick.tags, ...suggests];
     }
 
     const { data: frequent } = await this.feathers.service('tags').find({
@@ -86,6 +87,8 @@ export class ActivityPage implements OnInit {
       }
     }
 
+    console.log(suggests);
+
     return suggests;
   }
 
@@ -109,9 +112,10 @@ export class ActivityPage implements OnInit {
     if (this.tick.activity !== activity) {
       this.suggestTags = await this.loadSuggestTags();
     }
-    this.tick.tags = tags;
+    this.tick.tags = tags.filter(t => t.length > 0);
     this.tick.activity = activity;
     this.disableInput = false;
+    await this.inputBox.setFocus();
   }
 
   clickActivity(activity: string) {
@@ -121,6 +125,7 @@ export class ActivityPage implements OnInit {
       this.suggestTags = tags;
     }).finally(() => {
       this.disableInput = false;
+      this.inputBox.setFocus();
     });
   }
 

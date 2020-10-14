@@ -1,4 +1,4 @@
-import { Params } from '@feathersjs/feathers';
+import { Id, Params } from '@feathersjs/feathers';
 import { Service, NedbServiceOptions } from 'feathers-nedb';
 import { Application } from '../../declarations';
 
@@ -10,20 +10,7 @@ export class Ticks extends Service {
     this.app = app;
   }
 
-  async find (params: Params): Promise<any> {
-    if (typeof params?.query?.tickTime === 'string') {
-      switch(params.query.tickTime) {
-      case 'today': return await this.todayTicks(params, params.query.now);
-      case 'yesterday': return await this.yesterdayTicks(params, params.query.now);
-      case 'this-week': return await this.thisWeekTicks(params, params.query.now);
-      case 'last-week': return await this.lastWeekTicks(params, params.query.now);
-      case 'this-month': return await this.thisMonthTicks(params, params.query.now);
-      case 'last-month': return await this.lastMonthTicks(params, params.query.now);
-      case 'custom': return await this.customTimeTicks(params);
-      default: return [];
-      }
-    }
-  
+  async find (params: Params): Promise<any> {  
     return await super.find({
       ...params,
       query: {
@@ -31,6 +18,19 @@ export class Ticks extends Service {
         userId: params.user._id
       }
     });
+  }
+
+  async get(id: Id, params: Params): Promise<any> {
+    switch (id) {
+    case 'today': return await this.todayTicks(params, params.query?.now);
+    case 'yesterday': return await this.yesterdayTicks(params, params.query?.now);
+    case 'this-week': return await this.thisWeekTicks(params, params.query?.now);
+    case 'last-week': return await this.lastWeekTicks(params, params.query?.now);
+    case 'this-month': return await this.thisMonthTicks(params, params.query?.now);
+    case 'last-month': return await this.lastMonthTicks(params, params.query?.now);
+    case 'custom': return await this.customTimeTicks(params);
+    default: return await super.get(id, params);
+    }
   }
 
   async findBetween(startTime: number, endTime: number, params: Params): Promise<any[]> {
@@ -136,7 +136,6 @@ export class Ticks extends Service {
     const t0 = new Date(now);
     const Y = t0.getFullYear();
     const M = t0.getMonth();
-    const D = t0.getDate();
     const startTime = new Date(Y, M, 1);
     const endTime = new Date(Y, M+1, 1);
     return this.findBetween(startTime.getTime(), endTime.getTime(), params);
@@ -146,7 +145,6 @@ export class Ticks extends Service {
     const t0 = new Date(now);
     const Y = t0.getFullYear();
     const M = t0.getMonth();
-    const D = t0.getDate();
     const startTime = new Date(Y, M-1, 1);
     const endTime = new Date(Y, M, 1);
     return this.findBetween(startTime.getTime(), endTime.getTime(), params);
@@ -169,6 +167,13 @@ export class Ticks extends Service {
     tickData.tags = tickData.tags || [];
 
     Promise.all([
+      this.app.service('activity-tags').create({
+        activity: tickData.activity,
+        tags: tickData.tags
+      }, {
+        ...params,
+        provider: undefined,
+      }),
       ...tickData.tags.map((tag: string) => this.updateTagFreq(tag, params))
     ]);
 
@@ -177,41 +182,11 @@ export class Ticks extends Service {
   }
 
   async updateTagFreq(tag: string, params: Params): Promise<void> {
-    const exists = await this.app.service('tags').find({
+    return await this.app.service('tags').create({
+      tag
+    }, {
       ...params,
-      query: {
-        tag,
-        $limit: 1
-      },
+      provider: undefined
     });
-
-    // 已经保存过
-    if (exists && exists.total > 0) {
-      try {
-        const id = exists['data'][0]['_id'];
-        await this.app.service('tags').patch(id, {
-          $inc: { freq: 1 }
-        }, {
-          ...params,
-          provider: undefined,
-          nedb: { upsert: true }
-        });
-      } catch (e) {
-        console.error(e);
-      }
-      return;
-    }
-
-    try {
-      const result = await this.app.service('tags').create({
-        tag,
-        freq: 1,
-      }, {
-        ...params,
-        provider: undefined
-      });
-    } catch (e) {
-      console.error(e);
-    }
   }
 }

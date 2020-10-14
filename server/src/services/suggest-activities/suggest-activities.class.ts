@@ -12,6 +12,12 @@ interface Bucket {
   activities: Activity[]
 }
 
+interface Query {
+  timeBucket: any,
+  'activities.freq': { $gt: number },
+  $limit: number
+}
+
 export class SuggestActivities extends Service {
   app: Application;
   roundTo = 10;
@@ -37,10 +43,6 @@ export class SuggestActivities extends Service {
     return b.freq - a.freq;
   }
 
-  filterFn(a: Activity): boolean {
-    return a.freq > 1;
-  }
-
   mapFn(a: Activity): string {
     return a.text;
   }
@@ -49,37 +51,40 @@ export class SuggestActivities extends Service {
     const bucket = this.timeBucket(now);
     const found: string[] = [];
 
+    const query: Query = {
+      timeBucket: bucket,
+      'activities.freq': { $gt: 1 },
+      $limit: 1
+    };
+
     const f0: Bucket[] = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
-      query: {
-        timeBucket: bucket,
-        $limit: 1
-      }
+      query
     });
 
     if (f0.length > 0) {
-      const activities = f0[0].activities.filter(this.filterFn).sort(this.sortFn);
+      const activities = f0[0].activities.sort(this.sortFn);
       for (const a of activities) {
         if (found.indexOf(a.text) < 0) {
           found.push(a.text);
         }
       }
+
+      return found;
     }
   
+    query.timeBucket = { $lt: bucket };
     const f1: Bucket[] = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
-      query: {
-        timeBucket: { $lt: bucket },
-        $limit: 1
-      }
+      query
     });
 
     if (f1.length > 0) {
-      const activities = f1[0].activities.filter(this.filterFn).sort(this.sortFn);
+      const activities = f1[0].activities.sort(this.sortFn);
       for (const a of activities) {
         if (found.indexOf(a.text) < 0) {
           found.push(a.text);
@@ -87,18 +92,16 @@ export class SuggestActivities extends Service {
       }
     }
 
+    query.timeBucket = { $gt: bucket };
     const f2: Bucket[] = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
-      query: {
-        timeBucket: { $gt: bucket },
-        $limit: 1
-      }
+      query
     });
 
     if (f2.length > 0) {
-      const activities = f2[0].activities.filter(this.filterFn).sort(this.sortFn);
+      const activities = f2[0].activities.sort(this.sortFn);
       for (const a of activities) {
         if (found.indexOf(a.text) < 0) {
           found.push(a.text);
@@ -170,7 +173,7 @@ export class SuggestActivities extends Service {
     if (m.has(bucket)) {
       const activities = m.get(bucket);
       if (activities) {
-        return activities.filter(this.filterFn).sort(this.sortFn).map(this.mapFn);
+        return activities.sort(this.sortFn).map(this.mapFn);
       }
     }
     return [];

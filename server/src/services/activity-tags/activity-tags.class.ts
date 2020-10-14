@@ -23,14 +23,34 @@ export class ActivityTags extends Service {
       })
     });
 
-    if (results.length === 0) {
-      return await this.refresh(params);
+    if (results.length > 0) {
+      return results.reduce((arr, item) => [...arr, ...item.tags], []);
     }
-
-    return results;
+    return await this.refresh(params);
   }
 
   create(data: Partial<any>, params: Params): Promise<any> {
+    if (params.provider === undefined) {
+      const db = this.getModel(params);
+      return new Promise((resolve, reject) => {
+        db.update({
+          activity: data.activity,
+        }, {
+          $set: {
+            activity: data.activity,
+            userId: params.user._id,
+          },
+          $addToSet: {
+            tags: data.tags
+          }
+        }, {
+          upsert: true
+        }, (err: Error|null) => {
+          if (err) reject(err);
+          resolve();
+        });
+      });
+    }
     return super.create(Object.assign(data, {
       userId: params.user._id
     }), params);
@@ -68,7 +88,7 @@ export class ActivityTags extends Service {
       const tags = [...entry.tags];
 
       try {
-        await this._create({
+        await this.create({
           activity: entry.activity,
           tags
         }, {
@@ -76,9 +96,6 @@ export class ActivityTags extends Service {
           provider: undefined
         });
       } catch (e) {
-        if (e.errorType === 'uniqueViolated') {
-          continue;
-        }
         console.error('create failed:', e);
       }
     }
