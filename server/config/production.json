@@ -1,4 +1,11 @@
 {
   "host": "localhost",
-  "port": "3030"
+  "port": "3030",
+  "authentication": {
+    "secret": "muXYjtdK0341pXsOSoDEi0aSU4I=",
+    "jwtOptions": {
+      "audience": "https://dailytick-v2.holmesconan.me",
+      "expiresIn": "30d"
+    }
+  }
 }

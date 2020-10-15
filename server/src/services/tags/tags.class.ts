@@ -96,7 +96,7 @@ export class Tags extends Service {
       total: m.size,
       limit: params.query?.$limit || 10,
       skip: 0,
-      data: tags.map(tag => { tag })
+      data: tags.map(tag => { tag; })
     };
   }
 }

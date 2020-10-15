@@ -1,6 +1,5 @@
 import * as authentication from '@feathersjs/authentication';
 import { disallow } from 'feathers-hooks-common';
-import setTimestamp from '../../hooks/set-timestamp';
 // Don't remove this comment. It's needed to format import lines nicely.
 
 const { authenticate } = authentication.hooks;
