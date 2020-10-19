@@ -15,7 +15,6 @@ export class ActivityPage implements OnInit {
   @ViewChild(IonInput) inputBox: IonInput;
 
   tick: Tick;
-  disableInput = false;
   suggests: string[] = [];
 
   constructor(private modal: ModalController, private feathers: FeathersService) { }
@@ -57,14 +56,16 @@ export class ActivityPage implements OnInit {
   }
 
   async loadSuggestTags(): Promise<string[]> {
-    const suggests: string[] = await this.feathers.service('activity-tags').find({
+    const suggests: string[] = [];
+    const s = await this.feathers.service('activity-tags').find({
       query: {
         activity: this.tick.activity
       }
     });
+    Array.prototype.push.apply(suggests, s.tags);
 
     if (this.tick.tags.length === 0) {
-      this.tick.tags = [...this.tick.tags, ...suggests];
+      this.tick.tags = [...suggests];
     }
 
     const { data: frequent } = await this.feathers.service('tags').find({
@@ -103,7 +104,6 @@ export class ActivityPage implements OnInit {
   }
 
   async onChange(event: any) {
-    this.disableInput = true;
     const value = event.detail.value;
     const tags: string[] = [];
     const activity = value.replace(/#[^#]+(\s+|$)/g, (tag: string) => {
@@ -115,17 +115,14 @@ export class ActivityPage implements OnInit {
     }
     this.tick.tags = tags.filter(t => t.length > 0);
     this.tick.activity = activity;
-    this.disableInput = false;
     await this.inputBox.setFocus();
   }
 
   clickActivity(activity: string) {
-    this.disableInput = true;
     this.tick.activity = activity;
     this.loadSuggestTags().then(tags => {
       this.suggests = tags;
     }).finally(() => {
-      this.disableInput = false;
       this.inputBox.setFocus();
     });
   }

@@ -35,8 +35,12 @@ export class TabStatisticPage implements OnInit {
   }
 
   loadData(type: string) {
-    this.feathers.service('ticks').get(type, {
-      query: { now: Date.now() }
+    const { startTime, endTime } = this.getTimeRange(type, Date.now());
+    this.feathers.service('ticks').get('time-range', {
+      query: {
+        startTime,
+        endTime
+      }
     }).then((items: any[]) => {
       this.items = this.addDuration(items);
       this.activityS = this.activityStatistic(this.items);
@@ -100,5 +104,43 @@ export class TabStatisticPage implements OnInit {
       return r;
     }, []);
     return results;
+  }
+
+  getTimeRange(type: string, now: number): any {
+    const t1 = new Date(now);
+    const t2 = new Date(now);
+    const weekDay = t1.getDay() || 7;
+    t1.setHours(0); t1.setMinutes(0); t1.setSeconds(0); t1.setMilliseconds(0);
+    t2.setHours(0); t2.setMinutes(0); t2.setSeconds(0); t2.setMilliseconds(0);
+
+    switch (type) {
+    case 'today':
+      t2.setDate(t2.getDate()+1);
+      break;
+    case 'yesterday':
+      t1.setDate(t1.getDate()-1);
+      break;
+    case 'this-week':
+      t1.setDate(t1.getDate() - (weekDay - 1));
+      t2.setDate(t2.getDate() + (7 - weekDay + 1));
+      break;
+    case 'last-week':
+      t1.setDate(t1.getDate() - (weekDay + 6));
+      t2.setDate(t2.getDate() - (weekDay - 1));
+      break;
+    case 'this-month':
+      t1.setDate(1);
+      t2.setMonth(t2.getMonth()+1);
+      t2.setDate(1);
+      break;
+    case 'last-month':
+      t1.setMonth(t1.getMonth()-1);
+      t1.setDate(1);
+      t2.setDate(1);
+      break;
+    default:
+      break;
+    }
+    return { startTime: t1.getTime(), endTime: t2.getTime() };
   }
 }

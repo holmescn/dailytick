@@ -54,9 +54,13 @@ export class ActivityTags extends Service {
     });
 
     if (results.length > 0) {
-      return results.reduce((arr, item) => [...arr, ...item.tags], []);
+      return {
+        tags: results.reduce((arr, item) => [...arr, ...item.tags], [])
+      };
     }
-    return await this.refresh(params);
+    return {
+      tags: await this.refresh(params)
+    };
   }
 
   async refresh(params: Params): Promise<any> {
@@ -91,21 +95,14 @@ export class ActivityTags extends Service {
       m.set(activity, entry);
     }
 
-    for (const entry of m.values()) {
-      const tags = [...entry.tags];
-
-      try {
-        await this.create({
-          activity: entry.activity,
-          tags
-        }, {
-          ...params,
-          provider: undefined
-        });
-      } catch (e) {
-        console.error('create failed:', e);
-      }
-    }
+    Promise.all([...m.values()].map(item => this.create({
+      activity: item.activity,
+      tags: item.tags
+    }, {
+      ...params,
+      type: 'upsert',
+      provider: undefined
+    })));
 
     const activity = params.query?.activity;
     if (m.has(activity)) {
