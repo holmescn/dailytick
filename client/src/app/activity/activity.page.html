@@ -25,8 +25,8 @@
     <ion-list-header>
       <ion-label class="list-header-text">{{ tick.activity ? '选择标签' : '选择活动' }}</ion-label>
     </ion-list-header>
-    <ion-item *ngFor="let item of suggests">
-      <ion-label *ngIf="tick.activity.length === 0" (click)="clickActivity(item)">{{ item }}</ion-label>
+    <ion-item *ngFor="let item of suggests" (click)="onClickItem(item)">
+      <ion-label *ngIf="tick.activity.length === 0">{{ item }}</ion-label>
       <ion-label *ngIf="tick.activity.length > 0">{{ item }}</ion-label>
       <ion-icon slot="end" name="checkmark-outline" *ngIf="tick.activity && tagChecked(item)"></ion-icon>
     </ion-item>

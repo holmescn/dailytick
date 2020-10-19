@@ -62,7 +62,10 @@ export class ActivityPage implements OnInit {
         activity: this.tick.activity
       }
     });
-    Array.prototype.push.apply(suggests, s.tags);
+
+    for (const t of s.tags) {
+      suggests.push(t);
+    }
 
     if (this.tick.tags.length === 0) {
       this.tick.tags = [...suggests];
@@ -116,6 +119,14 @@ export class ActivityPage implements OnInit {
     this.tick.tags = tags.filter(t => t.length > 0);
     this.tick.activity = activity;
     await this.inputBox.setFocus();
+  }
+
+  async onClickItem(item: string) {
+    if (this.tick.activity === '') {
+      this.clickActivity(item);
+    } else {
+      this.toggleTag(item);
+    }
   }
 
   clickActivity(activity: string) {
