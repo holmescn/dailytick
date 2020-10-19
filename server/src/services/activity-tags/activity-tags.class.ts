@@ -14,6 +14,36 @@ export class ActivityTags extends Service {
     this.app = app;
   }
 
+  create(data: Partial<any>, params: Params): Promise<any> {
+    if (params.type === 'upsert') {
+      const db = this.getModel(params);
+      return new Promise((resolve, reject) => {
+        db.update({
+          activity: data.activity,
+          userId: params.user._id
+        }, {
+          $set: {
+            activity: data.activity,
+            userId: params.user._id,
+          },
+          $addToSet: {
+            tags: {
+              $each: data.tags
+            }
+          }
+        }, {
+          upsert: true
+        }, (err: Error|null, numberOfUpdated: number) => {
+          if (err) reject(err);
+          resolve(numberOfUpdated);
+        });
+      });
+    }
+    return super.create(Object.assign(data, {
+      userId: params.user._id
+    }), params);
+  }
+
   async find (params: Params): Promise<any> {
     const results = await super.find({
       ...params,
@@ -29,40 +59,17 @@ export class ActivityTags extends Service {
     return await this.refresh(params);
   }
 
-  create(data: Partial<any>, params: Params): Promise<any> {
-    if (params.provider === undefined) {
-      const db = this.getModel(params);
-      return new Promise((resolve, reject) => {
-        db.update({
-          activity: data.activity,
-        }, {
-          $set: {
-            activity: data.activity,
-            userId: params.user._id,
-          },
-          $addToSet: {
-            tags: data.tags
-          }
-        }, {
-          upsert: true
-        }, (err: Error|null) => {
-          if (err) reject(err);
-          resolve();
-        });
-      });
-    }
-    return super.create(Object.assign(data, {
-      userId: params.user._id
-    }), params);
-  }
-
   async refresh(params: Params): Promise<any> {
-    const ticks: Tick[] = await this.app.service('ticks')._find({
+    const t0 = new Date();
+    t0.setHours(0); t0.setMinutes(0); t0.setSeconds(0); t0.setMilliseconds(0);
+    t0.setDate(1); t0.setMonth(t0.getMonth() - 1);
+
+    const ticks: Tick[] = await this.app.service('ticks').find({
       ...params,
       provider: undefined,
       paginate: false,
       query: {
-        tickTime: { $gt: 0 },
+        tickTime: { $gt: t0.getTime() },
         $sort: { tickTime: 1 },
         $select: ['activity', 'tags']
       }

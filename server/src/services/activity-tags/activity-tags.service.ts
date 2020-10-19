@@ -1,4 +1,4 @@
-// Initializes the `activityTags` service on path `/activity-tags`
+// Initializes the `activity-tags` service on path `/activity-tags`
 import { ServiceAddons } from '@feathersjs/feathers';
 import { Application } from '../../declarations';
 import { ActivityTags } from './activity-tags.class';

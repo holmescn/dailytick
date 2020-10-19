@@ -3,19 +3,15 @@ import path from 'path';
 import { Id, Params, ServiceMethods } from '@feathersjs/feathers';
 import { Application } from '../../declarations';
 
+interface Data {}
+
+interface ServiceOptions {}
+
 interface Tick {
   activity: string,
   tickTime: number,
   tags: string[],
   endTime: number
-}
-
-interface Data {
-
-}
-
-interface ServiceOptions {
-
 }
 
 export class ExportCsv implements Partial<ServiceMethods<Data>> {
@@ -30,8 +26,8 @@ export class ExportCsv implements Partial<ServiceMethods<Data>> {
   async get (id: Id, params?: Params): Promise<Data> {
     if (id === 'daily-details') {
       return this.exportDailyDetails(params);
-    } else if (id === 'daily-statistic') {
-      return this.exportDailyStatistic(params);
+    } else if (id === 'daily-tags') {
+      return this.exportDailyTags(params);
     } else {
       return {
         code: -1,
@@ -93,7 +89,7 @@ export class ExportCsv implements Partial<ServiceMethods<Data>> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async exportDailyStatistic(params?: Params): Promise<Data> {
+  async exportDailyTags(params?: Params): Promise<Data> {
     return {
       code: 0,
       message: ''

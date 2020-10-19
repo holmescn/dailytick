@@ -2,9 +2,13 @@ import { Params } from '@feathersjs/feathers';
 import { Service, NedbServiceOptions } from 'feathers-nedb';
 import { Application } from '../../declarations';
 
-export class Tags extends Service {
-  app: Application;
+interface Tag {
+  tag: string,
+  freq?: number
+}
 
+export class Tags extends Service<Tag> {
+  app: Application;
   constructor(options: Partial<NedbServiceOptions>, app: Application) {
     super(options);
     this.app = app;
@@ -26,38 +30,38 @@ export class Tags extends Service {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   create(data: any, params: Params): Promise<any> {
-    if (data.tag) {
-      const tag = data.tag;
+    if (params.type === 'upsert') {
       const db = this.getModel(params);
       const update = data.freq ? {
         $set: {
-          tag,
+          tag: data.tag,
           userId: params.user._id,
           freq: data.freq
         }
       } : {
         $set: {
-          tag,
+          tag: data.tag,
           userId: params.user._id,
         },
         $inc: { freq: 1 }
       };
+  
       return new Promise((resolve, reject) => {
         db.update({
-          tag
+          tag: data.tag,
+          userId: params.user._id,
         }, update, {
           upsert: true
-        }, (err: Error|null, numberOfUpdated: number) => {
+        }, (err: Error|null, numberOfUpdated: number, upsert: boolean) => {
           if (err) reject(err);
-          resolve(numberOfUpdated);
+          resolve({numberOfUpdated, upsert});
         });
       });
-    } else {
-      return super.create({
-        ...data,
-        userId: params.user._id
-      }, params);
     }
+    return super.create({
+      ...data,
+      userId: params.user._id
+    }, params);
   }
 
   async refresh(params: Params): Promise<any> {
@@ -68,6 +72,7 @@ export class Tags extends Service {
       paginate: false,
       query: {
         $sort: { tickTime: 1 },
+        $select: ['tags']
       }
     });
 
@@ -84,6 +89,7 @@ export class Tags extends Service {
       freq: entry[1]
     }, {
       ...params,
+      type: 'upsert',
       provider: undefined
     })));
 

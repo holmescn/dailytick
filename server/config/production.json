@@ -1,6 +1,7 @@
 {
+  "production": true,
   "host": "localhost",
-  "port": "3030",
+  "port": "3303",
   "authentication": {
     "secret": "muXYjtdK0341pXsOSoDEi0aSU4I=",
     "jwtOptions": {

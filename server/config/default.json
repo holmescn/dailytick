@@ -9,7 +9,7 @@
   "authentication": {
     "entity": "user",
     "service": "users",
-    "secret": "muXYjtdK0341pXsOSoDEi0aSU4I=",
+    "secret": "w9eLkU3O3CS4E7VkpiWONvKbn9U=",
     "authStrategies": [
       "jwt",
       "local"
@@ -21,7 +21,7 @@
       "audience": "https://yourdomain.com",
       "issuer": "feathers",
       "algorithm": "HS256",
-      "expiresIn": "7d"
+      "expiresIn": "1d"
     },
     "local": {
       "usernameField": "email",

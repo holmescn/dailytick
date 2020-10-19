@@ -4,13 +4,12 @@ import { Application } from '../../declarations';
 
 export class Ticks extends Service {
   app: Application;
-
   constructor(options: Partial<NedbServiceOptions>, app: Application) {
     super(options);
     this.app = app;
   }
 
-  async find (params: Params): Promise<any> {  
+  async find (params: Params): Promise<any> {
     return await super.find({
       ...params,
       query: {
@@ -20,22 +19,57 @@ export class Ticks extends Service {
     });
   }
 
-  async get(id: Id, params: Params): Promise<any> {
-    switch (id) {
-    case 'today': return await this.todayTicks(params, params.query?.now);
-    case 'yesterday': return await this.yesterdayTicks(params, params.query?.now);
-    case 'this-week': return await this.thisWeekTicks(params, params.query?.now);
-    case 'last-week': return await this.lastWeekTicks(params, params.query?.now);
-    case 'this-month': return await this.thisMonthTicks(params, params.query?.now);
-    case 'last-month': return await this.lastMonthTicks(params, params.query?.now);
-    case 'custom': return await this.customTimeTicks(params);
-    default: return await super.get(id, params);
-    }
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  create (data: any, params: Params): Promise<any> {
+    const tickData = {
+      ...data,
+      userId: params.user._id,
+      tags: data.tags || []
+    };
+
+    Promise.all([
+      this.app.service('suggest-activities').create({
+        activity: tickData.activity,
+        tickTime: tickData.tickTime
+      }, {
+        ...params,
+        type: 'upsert',
+        provider: undefined
+      }),
+      this.app.service('activity-tags').create({
+        activity: tickData.activity,
+        tags: tickData.tags
+      }, {
+        ...params,
+        type: 'upsert',
+        provider: undefined,
+      }),
+      ...tickData.tags.map((tag: string) => this.app.service('tags').create({
+        tag
+      }, {
+        ...params,
+        type: 'upsert',
+        provider: undefined
+      }))
+    ]);
+
+    // Call the original `create` method with existing `params` and new data
+    return super.create(tickData, params);
   }
 
-  async findBetween(startTime: number, endTime: number, params: Params): Promise<any[]> {
+  async get(id: Id, params: Params): Promise<any> {
+    if (id === 'time-range') {
+      return await this.findTicksInTimeRange(params);
+    }
+
+    return await super.get(id, params);
+  }
+
+  async findTicksInTimeRange(params: Params): Promise<any> {
+    const startTime = params.query?.startTime as number;
+    const endTime = params.query?.endTime as number;
     const columns = ['activity', 'tickTime', 'tags'];
-    const ticks = await this._find({
+    const ticks = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
@@ -49,7 +83,7 @@ export class Ticks extends Service {
       }
     });
 
-    const tickBeforeStartTime = await this._find({
+    const tickBeforeStartTime = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
@@ -60,8 +94,8 @@ export class Ticks extends Service {
         $select: columns,
       }
     });
-  
-    const tickAfterEndTime = await this._find({
+
+    const tickAfterEndTime = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
@@ -74,119 +108,5 @@ export class Ticks extends Service {
     });
 
     return [...tickBeforeStartTime, ...ticks, ...tickAfterEndTime];
-  }
-
-  async todayTicks(params: Params, now: number): Promise<any> {
-    const t0 = new Date(now);
-    const Y = t0.getFullYear();
-    const M = t0.getMonth();
-    const D = t0.getDate();
-    const startTime = new Date(Y, M, D);
-    const endTime = new Date(Y, M, D+1);
-  
-    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
-  }
-
-  async yesterdayTicks(params: Params, now: number): Promise<any> {
-    const t0 = new Date(now);
-    const Y = t0.getFullYear();
-    const M = t0.getMonth();
-    const D = t0.getDate();
-    const startTime = new Date(Y, M, D-1);
-    const endTime = new Date(Y, M, D);
-  
-    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
-  }
-
-  async thisWeekTicks(params: Params, now: number): Promise<any> {
-    const t0 = new Date(now);
-    const Y = t0.getFullYear();
-    const M = t0.getMonth();
-    const D = t0.getDate();
-    const startTime = new Date(Y, M, D);
-    if (startTime.getDay() > 1) {
-      startTime.setDate(startTime.getDate() - startTime.getDay() + 1);
-    }
-    const endTime = new Date(Y, M, D);
-    if (endTime.getDay() > 0) {
-      endTime.setDate(endTime.getDate() + (7 - endTime.getDay()) + 1);
-    }
-  
-    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
-  }
-
-  async lastWeekTicks(params: Params, now: number): Promise<any> {
-    const t0 = new Date(now);
-    const Y = t0.getFullYear();
-    const M = t0.getMonth();
-    const D = t0.getDate();
-    const startTime = new Date(Y, M, D);
-    if (startTime.getDay() > 1) {
-      startTime.setDate(startTime.getDate() - startTime.getDay() + 1 - 7);
-    }
-    const endTime = new Date(Y, M, D);
-    if (endTime.getDay() > 0) {
-      endTime.setDate(endTime.getDate() - endTime.getDay() + 1);
-    }
-  
-    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
-  }
-
-  async thisMonthTicks(params: Params, now: number): Promise<any> {
-    const t0 = new Date(now);
-    const Y = t0.getFullYear();
-    const M = t0.getMonth();
-    const startTime = new Date(Y, M, 1);
-    const endTime = new Date(Y, M+1, 1);
-    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
-  }
-
-  async lastMonthTicks(params: Params, now: number): Promise<any> {
-    const t0 = new Date(now);
-    const Y = t0.getFullYear();
-    const M = t0.getMonth();
-    const startTime = new Date(Y, M-1, 1);
-    const endTime = new Date(Y, M, 1);
-    return this.findBetween(startTime.getTime(), endTime.getTime(), params);
-  }
-
-  async customTimeTicks(params: Params): Promise<any> {
-    const startTime = params.query?.startTime as number;
-    const endTime = params.query?.endTime as number;
-    return this.findBetween(startTime, endTime, params);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  create (data: any, params: Params): Promise<any> {
-    const tickData = {
-      ...data,
-      userId: params.user._id,
-    };
-
-    // Add empty tags if no given.
-    tickData.tags = tickData.tags || [];
-
-    Promise.all([
-      this.app.service('activity-tags').create({
-        activity: tickData.activity,
-        tags: tickData.tags
-      }, {
-        ...params,
-        provider: undefined,
-      }),
-      ...tickData.tags.map((tag: string) => this.updateTagFreq(tag, params))
-    ]);
-
-    // Call the original `create` method with existing `params` and new data
-    return super.create(tickData, params);
-  }
-
-  async updateTagFreq(tag: string, params: Params): Promise<void> {
-    return await this.app.service('tags').create({
-      tag
-    }, {
-      ...params,
-      provider: undefined
-    });
   }
 }

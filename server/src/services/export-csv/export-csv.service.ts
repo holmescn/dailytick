@@ -1,4 +1,4 @@
-// Initializes the `exportCsv` service on path `/export-csv`
+// Initializes the `export-csv` service on path `/export-csv`
 import { ServiceAddons } from '@feathersjs/feathers';
 import { Application } from '../../declarations';
 import { ExportCsv } from './export-csv.class';

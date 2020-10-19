@@ -12,10 +12,12 @@ interface Bucket {
   activities: Activity[]
 }
 
-interface Query {
-  timeBucket: any,
-  'activities.freq': { $gt: number },
-  $limit: number
+function sortFn(a: Activity, b: Activity): number {
+  return b.freq - a.freq;
+}
+
+function mapFn(a: Activity): string {
+  return a.text;
 }
 
 export class SuggestActivities extends Service {
@@ -25,6 +27,62 @@ export class SuggestActivities extends Service {
   constructor(options: Partial<NedbServiceOptions>, app: Application) {
     super(options);
     this.app = app;
+  }
+
+  create(data: Partial<any>, params: Params): Promise<any> {
+    if (params.type === 'upsert') {
+      const db = this.getModel(params);
+      const timeBucket = data.timeBucket || this.timeBucket(data.tickTime);
+      return new Promise((resolve, reject) => {
+        db.findOne({
+          timeBucket,
+          userId: params.user._id
+        }, (err, doc) => {
+          if (err) reject(err);
+          const update: {
+            $set: {
+              timeBucket: number,
+              userId: string,
+              activities: Activity[]
+            }
+          } = {
+            $set: {
+              timeBucket,
+              userId: params.user._id,
+              activities: []
+            }
+          };
+
+          if (doc) {
+            Array.prototype.push.apply(update.$set.activities, doc.activities);
+          }
+
+          if (data.activity) {
+            const index = update.$set.activities.findIndex(t => t.text === data.activity);
+            if (index < 0) {
+              update.$set.activities.push({
+                text: data.activity,
+                freq: 1
+              });
+            } else {
+              update.$set.activities[index]['freq'] += 1;
+            }
+          }
+
+          db.update({
+            timeBucket,
+            userId: params.user._id
+          }, update, { upsert: true }, (err, numberOfUpdated) => {
+            if (err) reject(err);
+            resolve(numberOfUpdated);
+          });
+        });
+      });
+    }
+
+    return super.create(Object.assign(data, {
+      userId: params.user._id
+    }), params);
   }
 
   find (params: Params): Promise<any> {
@@ -39,19 +97,11 @@ export class SuggestActivities extends Service {
     }));
   }
 
-  sortFn(a: Activity, b: Activity): number {
-    return b.freq - a.freq;
-  }
-
-  mapFn(a: Activity): string {
-    return a.text;
-  }
-
   async activitiesInBucket(params: Params, now: number): Promise<string[]> {
     const bucket = this.timeBucket(now);
     const found: string[] = [];
 
-    const query: Query = {
+    const query: any = {
       timeBucket: bucket,
       'activities.freq': { $gt: 1 },
       $limit: 1
@@ -65,14 +115,12 @@ export class SuggestActivities extends Service {
     });
 
     if (f0.length > 0) {
-      const activities = f0[0].activities.sort(this.sortFn);
+      const activities = f0[0].activities.sort(sortFn);
       for (const a of activities) {
         if (found.indexOf(a.text) < 0) {
           found.push(a.text);
         }
       }
-
-      return found;
     }
   
     query.timeBucket = { $lt: bucket };
@@ -84,7 +132,7 @@ export class SuggestActivities extends Service {
     });
 
     if (f1.length > 0) {
-      const activities = f1[0].activities.sort(this.sortFn);
+      const activities = f1[0].activities.sort(sortFn);
       for (const a of activities) {
         if (found.indexOf(a.text) < 0) {
           found.push(a.text);
@@ -101,7 +149,7 @@ export class SuggestActivities extends Service {
     });
 
     if (f2.length > 0) {
-      const activities = f2[0].activities.sort(this.sortFn);
+      const activities = f2[0].activities.sort(sortFn);
       for (const a of activities) {
         if (found.indexOf(a.text) < 0) {
           found.push(a.text);
@@ -117,31 +165,32 @@ export class SuggestActivities extends Service {
   }
 
   async refresh(params: Params, bucket: number): Promise<string[]> {
+    const t0 = new Date();
+    t0.setHours(0); t0.setMinutes(0); t0.setSeconds(0); t0.setMilliseconds(0);
+    t0.setMonth(t0.getMonth() - 1); t0.setDate(1);
     const ticks: {activity: string, tickTime: number}[] = await this.app.service('ticks')._find({
       ...params,
       provider: undefined,
       paginate: false,
       query: {
-        tickTime: { $gt: 0 },
+        tickTime: { $gt: t0.getTime() },
         $sort: { tickTime: 1 },
         $select: ['activity', 'tickTime']
       }
     });
 
-    const m = new Map<number, {text: string, freq: number}[]>();
+    const m = new Map<number, Activity[]>();
     for(const tick of ticks) {
       const timeBucket = this.timeBucket(tick.tickTime);
       if (m.has(timeBucket)) {
-        const activities = m.get(timeBucket);
-        if (activities) {
-          const index = activities.findIndex(t => t.text === tick.activity);
-          if (index < 0) {
-            activities.push({ text: tick.activity, freq: 1 });
-          } else {
-            activities[index]['freq'] += 1;
-          }
-          m.set(timeBucket, activities);
+        const activities = m.get(timeBucket) as Activity[];
+        const index = activities.findIndex(t => t.text === tick.activity);
+        if (index < 0) {
+          activities.push({ text: tick.activity, freq: 1 });
+        } else {
+          activities[index]['freq'] += 1;
         }
+        m.set(timeBucket, activities);
       } else {
         m.set(timeBucket, [{
           text: tick.activity,
@@ -150,31 +199,18 @@ export class SuggestActivities extends Service {
       }
     }
 
-    const db = this.getModel(params);
-    for (const timeBucket of m.keys()) {
-      const activities = m.get(timeBucket);
-      if (activities) {
-        db.update({
-          timeBucket
-        }, {
-          $set: {
-            userId: params.user._id,
-            timeBucket,
-            activities: activities.sort(this.sortFn)
-          }
-        }, {
-          upsert: true
-        }, (err: Error|null) => {
-          if (err) console.log(err);
-        });
-      }
-    }
+    Promise.all([...m.entries()].map(item => this.create({
+      timeBucket: item[0],
+      activities: item[1]
+    }, {
+      ...params,
+      type: 'upsert',
+      provider: undefined
+    })));
 
     if (m.has(bucket)) {
-      const activities = m.get(bucket);
-      if (activities) {
-        return activities.sort(this.sortFn).map(this.mapFn);
-      }
+      const activities = m.get(bucket) as Activity[];
+      return activities.sort(sortFn).map(mapFn);
     }
     return [];
   }

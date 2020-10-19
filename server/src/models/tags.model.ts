@@ -6,11 +6,9 @@ export default function (app: Application): NeDB<any>  {
   const dbPath = app.get('nedb');
   const Model = new NeDB({
     filename: path.join(dbPath, 'tags.db'),
-    inMemoryOnly: true,
+    inMemoryOnly: app.get('production'),
     autoload: true
   });
-
-  Model.ensureIndex({ fieldName: 'tag', unique: true, sparse: true });
 
   return Model;
 }

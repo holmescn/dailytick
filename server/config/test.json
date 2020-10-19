@@ -1,3 +1,4 @@
 {
-  "nedb": "../data/test"
+    "testing": true,
+    "nedb": "../test/data"
 }

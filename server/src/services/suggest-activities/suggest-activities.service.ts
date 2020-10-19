@@ -1,4 +1,4 @@
-// Initializes the `suggestActivities` service on path `/suggest-activities`
+// Initializes the `suggest-activities` service on path `/suggest-activities`
 import { ServiceAddons } from '@feathersjs/feathers';
 import { Application } from '../../declarations';
 import { SuggestActivities } from './suggest-activities.class';

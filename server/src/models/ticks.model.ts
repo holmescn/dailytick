@@ -5,12 +5,9 @@ import { Application } from '../declarations';
 export default function (app: Application): NeDB<any>  {
   const dbPath = app.get('nedb');
   const Model = new NeDB({
-    filename: dbPath ? path.join(dbPath, 'ticks.db') : '',
+    filename: path.join(dbPath, 'ticks.db'),
     autoload: true
   });
-
-  Model.ensureIndex({ fieldName: 'tickTime', unique: true });
-  Model.ensureIndex({ fieldName: 'userId', unique: false });
 
   return Model;
 }

@@ -1,6 +1,6 @@
-# dailytick-server
+# dailytick-v-2-server
 
-> DailyTick server-side.
+> Server-side of DailyTick v2.
 
 ## About
 
@@ -14,7 +14,7 @@ Getting up and running is as easy as 1, 2, 3.
 2. Install your dependencies
 
     ```
-    cd path/to/dailytick-server
+    cd path/to/dailytick-v-2-server
     npm install
     ```
 

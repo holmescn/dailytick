@@ -16,8 +16,7 @@ export class ActivityPage implements OnInit {
 
   tick: Tick;
   disableInput = false;
-  suggestTags: string[] = [];
-  suggestActivities: string[] = [];
+  suggests: string[] = [];
 
   constructor(private modal: ModalController, private feathers: FeathersService) { }
 
@@ -29,10 +28,14 @@ export class ActivityPage implements OnInit {
         tags: [],
         tickTime: 0
       }
-      this.suggestActivities = await this.loadSuggestActivities();
+      this.suggests = await this.loadSuggestActivities();
     } else {
-      this.tick = this.ticks.find(t => t._id === this.tickId);
-      this.suggestTags = await this.loadSuggestTags();
+      const tick = this.ticks.find(t => t._id === this.tickId);
+      this.tick = {
+        ...tick,
+        tags: [...tick.tags]
+      };
+      this.suggests = await this.loadSuggestTags();
     }
   }
 
@@ -87,8 +90,6 @@ export class ActivityPage implements OnInit {
       }
     }
 
-    console.log(suggests);
-
     return suggests;
   }
 
@@ -110,7 +111,7 @@ export class ActivityPage implements OnInit {
       return '';
     }).trim();
     if (this.tick.activity !== activity) {
-      this.suggestTags = await this.loadSuggestTags();
+      this.suggests = await this.loadSuggestTags();
     }
     this.tick.tags = tags.filter(t => t.length > 0);
     this.tick.activity = activity;
@@ -122,7 +123,7 @@ export class ActivityPage implements OnInit {
     this.disableInput = true;
     this.tick.activity = activity;
     this.loadSuggestTags().then(tags => {
-      this.suggestTags = tags;
+      this.suggests = tags;
     }).finally(() => {
       this.disableInput = false;
       this.inputBox.setFocus();

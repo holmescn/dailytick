@@ -1,7 +1,7 @@
 {
-  "name": "dailytick-server",
-  "description": "DailyTick server-side.",
-  "version": "0.0.0",
+  "name": "dailytick-v2-server",
+  "description": "Server-side of DailyTick v2.",
+  "version": "1.0.0",
   "homepage": "",
   "private": true,
   "main": "src",
@@ -20,40 +20,39 @@
     "config": "config/"
   },
   "engines": {
-    "node": "^10.0.0",
+    "node": "^12.0.0",
     "npm": ">= 3.0.0"
   },
   "scripts": {
-    "test": "npm run lint && npm run compile && npm run jest",
+    "test": "npm run lint && npm run compile && npm run mocha",
     "lint": "eslint src/. test/. --config .eslintrc.json --ext .ts --fix",
     "dev": "ts-node-dev --no-notify src/",
     "start": "npm run compile && NODE_ENV=production node lib/",
-    "jest": "jest --forceExit",
+    "mocha": "shx rm -rf test/data/ && NODE_ENV=test ts-mocha \"test/**/*.ts\" --recursive --exit",
     "compile": "shx rm -rf lib/ && tsc"
   },
   "standard": {
     "env": [
-      "jest"
+      "mocha"
     ],
     "ignore": []
   },
   "types": "lib/",
   "dependencies": {
-    "@feathersjs/authentication": "^4.5.8",
-    "@feathersjs/authentication-local": "^4.5.8",
-    "@feathersjs/authentication-oauth": "^4.5.8",
-    "@feathersjs/configuration": "^4.5.8",
-    "@feathersjs/errors": "^4.5.8",
-    "@feathersjs/express": "^4.5.8",
-    "@feathersjs/feathers": "^4.5.8",
-    "@feathersjs/socketio": "^4.5.8",
-    "@feathersjs/transport-commons": "^4.5.8",
+    "@feathersjs/authentication": "^4.5.9",
+    "@feathersjs/authentication-local": "^4.5.9",
+    "@feathersjs/authentication-oauth": "^4.5.9",
+    "@feathersjs/configuration": "^4.5.9",
+    "@feathersjs/errors": "^4.5.9",
+    "@feathersjs/express": "^4.5.9",
+    "@feathersjs/feathers": "^4.5.9",
+    "@feathersjs/socketio": "^4.5.9",
+    "@feathersjs/transport-commons": "^4.5.9",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "feathers-hooks-common": "^5.0.4",
     "feathers-memory": "^4.1.0",
     "feathers-nedb": "^5.1.0",
-    "fuse.js": "^6.4.1",
     "helmet": "^3.23.3",
     "nedb": "^1.8.0",
     "serve-favicon": "^2.5.0",
@@ -61,20 +60,23 @@
   },
   "devDependencies": {
     "@types/compression": "^1.7.0",
-    "@types/cors": "^2.8.7",
-    "@types/helmet": "0.0.47",
-    "@types/jest": "^26.0.14",
+    "@types/cors": "^2.8.8",
+    "@types/helmet": "0.0.48",
     "@types/jsonwebtoken": "^8.5.0",
+    "@types/mocha": "^8.0.3",
     "@types/nedb": "^1.8.11",
     "@types/serve-favicon": "^2.5.0",
-    "@typescript-eslint/eslint-plugin": "^3.10.1",
-    "@typescript-eslint/parser": "^3.10.1",
-    "axios": "^0.19.2",
-    "eslint": "^7.10.0",
-    "jest": "^26.4.2",
+    "@typescript-eslint/eslint-plugin": "^4.4.1",
+    "@typescript-eslint/parser": "^4.4.1",
+    "axios": "^0.20.0",
+    "chai": "^4.2.0",
+    "eslint": "^7.11.0",
+    "faker": "^5.1.0",
+    "mocha": "^8.1.3",
     "shx": "^0.3.2",
-    "ts-jest": "^26.4.1",
-    "ts-node-dev": "^1.0.0-pre.63",
+    "sinon": "^9.2.0",
+    "ts-mocha": "^7.0.0",
+    "ts-node-dev": "^1.0.0-pre.65",
     "typescript": "^3.9.7"
   }
 }

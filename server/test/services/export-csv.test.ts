@@ -1,8 +1,10 @@
+import assert from 'assert';
 import app from '../../src/app';
 
-describe('\'exportCsv\' service', () => {
+describe('\'export-csv\' service', () => {
   it('registered the service', () => {
     const service = app.service('export-csv');
-    expect(service).toBeTruthy();
+
+    assert.ok(service, 'Registered the service');
   });
 });
