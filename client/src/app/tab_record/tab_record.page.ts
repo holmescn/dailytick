@@ -9,7 +9,6 @@ import { FeathersService } from '../services/feathers.service';
 import { FormatterService } from '../services/formatter.service';
 import { Service } from '@feathersjs/feathers';
 import { Tick } from "../interfaces/tick";
-import { receiveMessageOnPort } from 'worker_threads';
 
 @Component({
   selector: 'app-tab_record',
@@ -45,33 +44,27 @@ export class TabRecordPage implements OnInit, OnDestroy {
     const service = this.feathers.service("ticks");
     service.on('created', (tick: Tick) => {
       const index = this.ticks.findIndex(t => t.tickTime < tick.tickTime);
-      const _tick = Object.assign(tick, {
-        _date: this.formatter.date(tick.tickTime)
-      });
+      const _tick = this.formatTick(tick, index, this.ticks);
       if (index < 0) {
         this.ticks.unshift(_tick);
-        // this.virtualScroll.checkRange(0, this.ticks.length);
+        this.virtualScroll.checkRange(0, 2);
       } else {
         this.ticks.splice(index, 0, _tick);
-        // this.ticks = [...this.ticks];
+        this.virtualScroll.checkRange(0, 2);
       }
-      this.virtualScroll.checkRange(0, this.ticks.length);
+      // this.virtualScroll.checkRange(0, this.ticks.length);
     });
     service.on('updated', (tick: Tick) => {
       const index = this.ticks.findIndex(_tick => _tick._id === tick._id);
       if (index >= 0) {
-        this.ticks[index] = Object.assign(this.ticks[index], tick, {
-          _date: this.formatter.date(tick.tickTime)
-        });
+        this.ticks[index] = this.formatTick(tick, index, this.ticks);
         this.virtualScroll.checkRange(index, 1);
       }
     });
     service.on('patched', (tick: Tick) => {
       const index = this.ticks.findIndex(_tick => _tick._id === tick._id);
       if (index >= 0) {
-        this.ticks[index] = Object.assign(this.ticks[index], tick, {
-          _date: this.formatter.date(tick.tickTime)
-        });
+        this.ticks[index] = this.formatTick(tick, index, this.ticks);
         this.virtualScroll.checkRange(index, 1);
       }
     });
@@ -81,14 +74,14 @@ export class TabRecordPage implements OnInit, OnDestroy {
     return service;
   }
 
-  formatTime(tick: Tick): string {
-    return this.formatter.time(tick.tickTime);
-  }
-
-  formatDuration(tick: Tick): string {
-    const index = this.ticks.findIndex((t: Tick) => tick._id === t._id);
-    const _endTime = index <= 0 ? Date.now() : this.ticks[index-1].tickTime;
-    return this.formatter.duration(_endTime - tick.tickTime);
+  formatTick(tick: Tick, index: number, ticks: Tick[]): Tick {
+    const _endTime = index <= 0 ? Date.now() : ticks[index-1].tickTime;
+    return Object.assign(tick, {
+      _date: this.formatter.date(tick.tickTime),
+      _time: this.formatter.time(tick.tickTime),
+      _duration: this.formatter.duration(_endTime - tick.tickTime),
+      _tagsText: tick.tags.length > 0 ? `#${tick.tags.join(' #')}` : ''
+    });
   }
 
   async showModal(tickId: string) {
@@ -181,9 +174,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
   async loadMore(event) {
     // load more data
     const ticks = await this.loadData(this.ticks[this.ticks.length-1].tickTime);
-    this.ticks = [...this.ticks, ...ticks.map((t: Tick) => Object.assign(t, {
-      _date: this.formatter.date(t.tickTime)
-    }))];
+    this.ticks = [...this.ticks, ...ticks].map(this.formatTick.bind(this));
 
     // Hide Infinite List Loader on Complete
     event.target.complete();
@@ -200,9 +191,8 @@ export class TabRecordPage implements OnInit, OnDestroy {
 
   async doRefresh(event) {
     const ticks = await this.loadData(Date.now());
-    this.ticks = ticks.map((t: Tick) => Object.assign(t, {
-      _date: this.formatter.date(t.tickTime)
-    }));
+    this.ticks = ticks.map(this.formatTick.bind(this));
+
     this.infiniteScroll.disabled = false;
     event.target.complete();
   }
@@ -279,9 +269,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.loadData(Date.now()).then((ticks: Tick[]) => {
-      this.ticks = ticks.map((t: Tick) => Object.assign(t, {
-        _date: this.formatter.date(t.tickTime)
-      }));
+      this.ticks = ticks.map(this.formatTick.bind(this));
     });
 
     this.timer = window.setInterval(() => {
@@ -295,8 +283,10 @@ export class TabRecordPage implements OnInit, OnDestroy {
         const ss = s < 10 ? `0${s}` : s;
         if (h > 0) {
           this.title = `${hh}:${mm}:${ss}`;
+          this.ticks[0]._duration = `${h}h ${m}m`;
         } else {
           this.title = `${mm}:${ss}`;
+          this.ticks[0]._duration = `${m}m ${s}s`;
         }
       }
     }, 1000);

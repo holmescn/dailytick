@@ -16,12 +16,12 @@ export default {
   },
 
   after: {
-    all: [],
-    find: [ discard('_id') ],
-    get: [],
+    all:  [],
+    find: [],
+    get:  [],
     create: [],
     update: [],
-    patch: [],
+    patch:  [],
     remove: []
   },
 

@@ -24,19 +24,19 @@
     <ion-item-divider *virtualHeader="let header">
       {{ header }}
     </ion-item-divider>
-    <ion-item-sliding *virtualItem="let item">
+    <ion-item-sliding *virtualItem="let tick">
       <ion-item>
-        <ion-note slot="start" (click)="editTickTime(item)" class="tick-time">{{ formatTime(item) }}</ion-note>
-        <ion-label (click)="editActivity(item)">
-          <h2 class="tick-activity">{{ item.activity }}</h2>
+        <ion-note slot="start" (click)="editTickTime(tick)" class="tick-time">{{ tick._time }}</ion-note>
+        <ion-label (click)="editActivity(tick)">
+          <h2 class="tick-activity">{{ tick.activity }}</h2>
           <!-- h3>{{ item._time }} {{ item._duration }}</h3 -->
-          <p class="tick-tags">#{{ item.tags.join("&nbsp; #") }}</p>
+          <p class="tick-tags">{{ tick._tagsText }}</p>
         </ion-label>
-        <ion-note slot="end" class="tick-duration">{{ formatDuration(item) }}</ion-note>
+        <ion-note slot="end" class="tick-duration">{{ tick._duration }}</ion-note>
       </ion-item>
       <ion-item-options side="end">
-        <ion-item-option (click)="newTick($event, item)">插入</ion-item-option>
-        <ion-item-option color="danger" (click)="removeTick($event, item)">删除</ion-item-option>
+        <ion-item-option (click)="newTick($event, tick)">插入</ion-item-option>
+        <ion-item-option color="danger" (click)="removeTick($event, tick)">删除</ion-item-option>
       </ion-item-options>
     </ion-item-sliding>
   </ion-virtual-scroll>

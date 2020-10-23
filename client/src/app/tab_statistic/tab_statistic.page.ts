@@ -1,6 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { FeathersService } from '../services/feathers.service';
 
+interface Tick {
+  _id: string,
+  activity: string,
+  tags: string[],
+  tickTime: number,
+  duration?: number
+}
+
+interface Item {
+  text: string,
+  duration: number,
+  ticks?: Tick[]
+  _duration?: string,
+}
+
 @Component({
   selector: 'app-tab_statistic',
   templateUrl: 'tab_statistic.page.html',
@@ -8,51 +23,58 @@ import { FeathersService } from '../services/feathers.service';
 })
 export class TabStatisticPage implements OnInit {
   time: string = "today";
-  items: any[] = [];
-  activityS: any[] = [];
-  tagS: any[] = [];
+  ticks: Tick[] = [];
+  items: Item[] = [];
   segment: string = 'activities';
 
   constructor(private feathers: FeathersService) {
 
   }
 
-  segmentChanged(event) {
-    this.segment = event.detail.value;
+  async ngOnInit() {
+    this.ticks = await this.loadData(this.time);
+    this.updateItems();
   }
 
-  onSelectChanged(event: CustomEvent) {
+  updateItems() {
+    if (this.segment === 'tags') {
+      this.items = this.tagStatistic(this.ticks);
+    } else {
+      this.items = this.activityStatistic(this.ticks);
+    }
+  }
+
+  segmentChanged(event) {
+    this.segment = event.detail.value;
+    this.updateItems();
+  }
+
+  async onSelectChanged(event: CustomEvent) {
     this.time = event.detail.value;
     if (this.time === 'custom') {
       //
     } else {
-      this.loadData(this.time);
+      this.ticks = await this.loadData(this.time);
+      this.updateItems();
     }
   }
 
-  ngOnInit() {
-    this.loadData(this.time);
-  }
-
-  loadData(type: string) {
+  async loadData(type: string): Promise<Tick[]> {
     const { startTime, endTime } = this.getTimeRange(type, Date.now());
-    this.feathers.service('ticks').get('time-range', {
+    const ticks: Tick[] = await this.feathers.service('ticks').get('time-range', {
       query: {
         startTime,
         endTime
       }
-    }).then((items: any[]) => {
-      this.items = this.addDuration(items);
-      this.activityS = this.activityStatistic(this.items);
-      this.tagS = this.tagStatistic(this.items);
-    }).catch(console.error);
+    });
+    return this.addDuration(ticks);
   }
 
-  addDuration(data: any[]) {
-    return data.map((item: any, index: number, items: any[]) => Object.assign(item, {
-      duration: Math.floor(((index+1 < items.length ? items[index+1].tickTime : 0) - item.tickTime) / 1000),
+  addDuration(ticks: Tick[]): Tick[] {
+    return ticks.map((tick: Tick, index: number, ticks: Tick[]) => Object.assign(tick, {
+      duration: Math.floor(((index+1 < ticks.length ? ticks[index+1].tickTime : 0) - tick.tickTime) / 1000),
     })).filter(
-      (item: any) => item.duration > 0
+      (tick: Tick) => tick.duration > 0
     );
   }
 
@@ -63,47 +85,52 @@ export class TabStatisticPage implements OnInit {
     return h > 0 ? `${h}h ${m}m` : (s > 35 ? `${m+1}m` : `${m}m`);
   }
 
-  activityStatistic(data: any[]) {
-    const results: any[] = data.reduce((r: any[], item: any) => {
-      const i = r.findIndex(t => t.text === item.activity.trim());
-      if (i < 0) {
-        r.push({
-          text: item.activity.trim(),
-          duration: item.duration,
-          items: [{
-            _id: item._id,
-            activity: item.activity,
-            tickTime: item.tickTime,
-          }]
+  activityStatistic(ticks: Tick[]): Item[] {
+    const results: Item[] = ticks.reduce((items: Item[], tick: Tick) => {
+      const index = items.findIndex(item => item.text === tick.activity);
+      if (index < 0) {
+        items.push({
+          text: tick.activity.trim(),
+          duration: tick.duration,
+          ticks: [tick],
+          _duration: this.formatDuration(tick.duration)
         });
       } else {
-        r[i]['duration'] += item.duration;
-        r[i]['items'].push(item);
+        items[index].duration += tick.duration;
+        items[index]._duration = this.formatDuration(items[index].duration);
+        items[index].ticks.push(tick);
       }
-  
-      r[0]['duration'] += item.duration;
-      return r;
+      items[0].duration += tick.duration;
+      items[0]._duration = this.formatDuration(items[0].duration)
+      return items;
     }, [{ text: '共记', duration: 0 }]);
   
     return [...results.slice(1), results[0]];
   }
 
-  tagStatistic(data: any[]) {
-    const results: any[] = data.reduce((r: any[], item: any) => {
-      item.tags.forEach((tag: string) => {
-        const i = r.findIndex(t => t.text === tag.trim());
-        if (i < 0) {
-          r.push({
-            text: tag.trim(),
-            duration: item.duration,
+  tagStatistic(ticks: Tick[]): Item[] {
+    const results: Item[] = ticks.reduce((items: Item[], tick: Tick) => {
+      tick.tags.forEach((tag: string) => {
+        const index = items.findIndex(t => t.text === tag);
+        if (index < 0) {
+          items.push({
+            text: tag,
+            duration: tick.duration,
+            ticks: [tick],
+            _duration: this.formatDuration(tick.duration)
           });
         } else {
-          r[i]['duration'] += item.duration;
+          items[index].duration += tick.duration;
+          items[index]._duration = this.formatDuration(tick.duration);
+          items[index].ticks.push(tick);
         }
       });
-      return r;
-    }, []);
-    return results;
+      items[0].duration += tick.duration;
+      items[0]._duration = this.formatDuration(items[0].duration)
+      return items;
+    }, [{ text: '共记', duration: 0 }]);
+
+    return [...results.slice(1), results[0]];
   }
 
   getTimeRange(type: string, now: number): any {

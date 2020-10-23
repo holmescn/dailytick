@@ -54,12 +54,21 @@ export class ActivityTags extends Service {
     });
 
     if (results.length > 0) {
+      const tags = results.reduce((arr, item) => [...arr, ...item.tags], []);
       return {
-        tags: results.reduce((arr, item) => [...arr, ...item.tags], [])
+        total: tags.length,
+        limit: tags.length,
+        skip: 0,
+        data: tags 
       };
     }
+
+    const tags = await this.refresh(params);
     return {
-      tags: await this.refresh(params)
+      total: tags.length,
+      limit: tags.length,
+      skip: 0,
+      data: tags 
     };
   }
 

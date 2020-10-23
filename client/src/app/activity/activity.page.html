@@ -7,10 +7,10 @@
     </ion-buttons>
     <ion-input
       type="text"
-      debounce="1500"
+      debounce="1000"
       enterkeyhint="done"
       placeholder="描述 #标签"
-      [value]="text(tick)"
+      [value]="inputText"
       (ionChange)="onChange($event)"></ion-input>
     <ion-buttons slot="end">
       <ion-button (click)="onOk($event)">
@@ -23,12 +23,11 @@
 <ion-content [fullscreen]="true">
   <ion-list>
     <ion-list-header>
-      <ion-label class="list-header-text">{{ tick.activity ? '选择标签' : '选择活动' }}</ion-label>
+      <ion-label class="list-header-text">{{ listHeader }}</ion-label>
     </ion-list-header>
-    <ion-item *ngFor="let item of suggests" (click)="onClickItem(item)">
-      <ion-label *ngIf="tick.activity.length === 0">{{ item }}</ion-label>
-      <ion-label *ngIf="tick.activity.length > 0">{{ item }}</ion-label>
-      <ion-icon slot="end" name="checkmark-outline" *ngIf="tick.activity && tagChecked(item)"></ion-icon>
+    <ion-item *ngFor="let item of suggests" (click)="onClickItem(item.text)">
+      <ion-label>{{ item.text }}</ion-label>
+      <ion-icon slot="end" name="checkmark-outline" *ngIf="item.checked"></ion-icon>
     </ion-item>
   </ion-list>
 </ion-content>

@@ -44,23 +44,9 @@
         </ion-grid>
       </ion-item>
     </ion-item-group>
-    <ion-item-group *ngIf="segment === 'activities'">
-      <ion-item-divider>
-        <ion-label>活动统计</ion-label>
-      </ion-item-divider>
-      <ion-item *ngFor="let a of activityS">
-        <ion-label>{{ a.text }}</ion-label>
-        <ion-note slot="end">{{ formatDuration(a.duration) }}</ion-note>
-      </ion-item>
-    </ion-item-group>
-    <ion-item-group *ngIf="segment === 'tags'">
-      <ion-item-divider>
-        <ion-label>标签统计</ion-label>
-      </ion-item-divider>
-      <ion-item *ngFor="let t of tagS">
-        <ion-label>#{{ t.text }}</ion-label>
-        <ion-note slot="end">{{ formatDuration(t.duration) }}</ion-note>
-      </ion-item>
-    </ion-item-group>
+    <ion-item *ngFor="let item of items">
+      <ion-label>{{ item.text }}</ion-label>
+      <ion-note slot="end">{{ item._duration }}</ion-note>
+    </ion-item>
   </ion-list>
 </ion-content>

@@ -85,12 +85,18 @@ export class SuggestActivities extends Service {
     }), params);
   }
 
-  find (params: Params): Promise<any> {
+  async find (params: Params): Promise<any> {
     if (params.query?.now) {
-      return this.activitiesInBucket(params, params.query.now);
+      const activities = await this.activitiesInBucket(params, params.query.now);
+      return {
+        total: activities.length,
+        limit: activities.length,
+        skip: 0,
+        data: activities
+      };
     }
 
-    return super.find(Object.assign(params, {
+    return await super.find(Object.assign(params, {
       query: Object.assign(params?.query, {
         userId: params.user._id
       })
