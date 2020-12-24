@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { FeathersService } from '../services/feathers.service';
@@ -9,41 +10,25 @@ import { FeathersService } from '../services/feathers.service';
   styleUrls: ['./login.page.scss'],
 })
 export class LoginPage implements OnInit {
-  email: string;
-  password: string;
-
   constructor(private feathers: FeathersService, private toast: ToastController, private router: Router) { }
 
-  onChange(type: string, event: CustomEvent) {
-    if (type === 'email') {
-      this.email = event.detail.value;
-    } else if (type === 'password') {
-      this.password = event.detail.value;
-    }
-  }
-
-  validate(email: string, password: string) {
-    if (!email || !password) {
-      return true;
-    }
-    return false;
-  }
-
-  login(event) {
-    // try to authenticate with feathers
-    this.feathers.login({
-      strategy: 'local',
-      email: this.email,
-      password: this.password
-    }).then(() => { // navigate to base URL on success
-      this.router.navigate(['/']);
-    }).catch(err => {
+  async submit(form: NgForm) {
+    try {
+      const user = await this.feathers.login({
+        strategy: 'local',
+        email: form.value.email,
+        password: form.value.password
+      });
+      console.log(user);
+      this.router.navigate(['/tabs/tab_record']);
+    } catch (err) {
       console.log(err);
-      this.toast.create({
+      const toast = await this.toast.create({
         message: `登录失败: ${err.detail}`,
         duration: 2000
-      }).then(toast => toast.present());
-    });
+      });
+      await toast.present();
+    }
   }
 
   ngOnInit() {

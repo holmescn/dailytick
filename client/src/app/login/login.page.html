@@ -1,34 +1,22 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title class="ion-text-center">登录</ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content class="ion-padding">
-  <ion-list>
-    <ion-item>
-      <ion-input
-        name="email"
-        type="email"
-        enterkeyhint="next"
-        placeholder="请在这里输入帐号"
-        [value]="email"
-        (ionChange)="onChange('email', $event)"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        name="password"
-        type="password"
-        placeholder="请在这里输入密码"
-        [value]="password"
-        (ionChange)="onChange('password', $event)"></ion-input>
-    </ion-item>
-  </ion-list>
-  <ion-grid>
-    <ion-row>
-      <ion-col>
-        <ion-button size="large" expand="full" [disabled]="validate(email, password)" (click)="login($event)">登录</ion-button>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+  <form #form="ngForm" (ngSubmit)="submit(form)">
+    <ion-grid>
+      <ion-row class="ion-justify-content-center">
+        <ion-col class="ion-align-self-center ion-padding" size-md="6" size-lg="5" size-xs="12">
+          <h3 class="ion-text-center">Login</h3>
+          <ion-item>
+            <ion-input name="email" type="email" placeholder="your@email.com" ngModel required></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input name="password" type="password" placeholder="Password" ngModel required></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col>
+          <ion-button size="large" type="submit" [disabled]="form.invalid" expand="block">Login</ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
 </ion-content>
