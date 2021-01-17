@@ -136,31 +136,36 @@ export class ActivityPage implements OnInit {
     }
   }
 
-  async onChange(event: CustomEvent) {
-    const value = event.detail.value;
+  extractTick(text: string): string {
     const tags: string[] = [];
-    const activity = value.replace(/#[^#]+(\s+|$)/g, (tag: string) => {
+    const activity = text.replace(/#[^#]+(\s+|$)/g, (tag: string) => {
       tags.push(tag.substring(1).trim());
       return '';
     }).trim();
 
     this.tick.tags = tags.filter(t => t.length > 0);
+  
+    return activity;    
+  }
 
+  async onBlur(event: CustomEvent) {
+    const activity = this.extractTick(this.inputText);
     if (activity.length > 0) {
       this.listHeader = '选择标签';
-      if (this.tick.activity !== activity) {
-        this.tick.activity = activity;
-        this.suggests = await this.loadSuggestTags();
-      }
+      this.tick.activity = activity;
+      this.suggests = await this.loadSuggestTags();
       this.checkTags(this.suggests, this.tick.tags);
     } else {
       this.listHeader = '选择活动';
       this.suggests = await this.loadSuggestActivities();
     }
 
-    setTimeout(() => {
-      this.inputText = this.formatText(this.tick);
-    }, 50);
+    this.inputText = this.formatText(this.tick);
+  }
+
+  async onChange(event: CustomEvent) {
+    const value = event.detail.value;
+    this.inputText = value;
   }
 
   async onClickItem(item: string) {
@@ -200,6 +205,7 @@ export class ActivityPage implements OnInit {
   }
 
   onOk(event: Event) {
+    this.tick.activity = this.extractTick(this.inputText);
     this.modal.dismiss({ action: 'ok', activity: this.tick.activity, tags: this.tick.tags });
   }
 

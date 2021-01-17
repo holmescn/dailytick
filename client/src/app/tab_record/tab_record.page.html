@@ -35,6 +35,7 @@
         <ion-note slot="end" class="tick-duration">{{ tick._duration }}</ion-note>
       </ion-item>
       <ion-item-options side="end">
+        <ion-item-option (click)="faviTick($event, tick)">收藏</ion-item-option>
         <ion-item-option (click)="newTick($event, tick)">插入</ion-item-option>
         <ion-item-option color="danger" (click)="removeTick($event, tick)">删除</ion-item-option>
       </ion-item-options>

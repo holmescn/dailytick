@@ -8,7 +8,7 @@ export default {
   before: {
     all: [ authenticate('jwt') ],
     find: [ disallow('external') ],
-    get:  [ disallow('external') ],
+    get:  [ ],
     create: [ disallow('external') ],
     update: [ disallow('external') ],
     patch:  [ disallow('external') ],

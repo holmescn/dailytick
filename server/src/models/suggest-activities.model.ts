@@ -6,7 +6,7 @@ export default function (app: Application): NeDB<any>  {
   const dbPath = app.get('nedb');
   const Model = new NeDB({
     filename: path.join(dbPath, 'suggest-activities.db'),
-    inMemoryOnly: app.get('production'),
+    // inMemoryOnly: app.get('production'),
     autoload: true
   });
 

@@ -19,10 +19,10 @@ export class LoginPage implements OnInit {
         email: form.value.email,
         password: form.value.password
       });
-      console.log(user);
+      console.debug(`User: ${user}`);
       this.router.navigate(['/tabs/tab_record']);
     } catch (err) {
-      console.log(err);
+      console.error(`Error: ${err}`);
       const toast = await this.toast.create({
         message: `登录失败: ${err.detail}`,
         duration: 2000

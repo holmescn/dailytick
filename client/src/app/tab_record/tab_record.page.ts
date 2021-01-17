@@ -101,7 +101,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
 
   async newTick(event, afterTick?: Tick) {
     if (afterTick) {
-      event.target.parentElement.parentElement.close();
+      this.closeSlideMenu(event);
     }
 
     const tickTime = afterTick ? afterTick.tickTime+1000 : Date.now();
@@ -136,7 +136,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
   }
 
   async removeTick(event, tick) {
-    event.target.parentElement.parentElement.close();
+    this.closeSlideMenu(event);
     const alert = await this.alert.create({
       header: '确定要删除',
       message: `${tick._date} ${tick._time} <br> <strong>${tick.activity}</strong>`,
@@ -152,6 +152,34 @@ export class TabRecordPage implements OnInit, OnDestroy {
           text: 'Okay',
           handler: () => {
             this.service.remove(tick._id);
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  async faviTick(event, tick) {
+    this.closeSlideMenu(event);
+    const alert = await this.alert.create({
+      header: '确定要收藏',
+      message: tick.activity,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+            //
+          }
+        }, {
+          text: 'Okay',
+          handler: () => {
+            this.feathers.service("suggest-activities").create({
+              tickTime: tick.tickTime,
+              activity: tick.activity
+            });
           }
         }
       ]
@@ -294,5 +322,9 @@ export class TabRecordPage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     window.clearInterval(this.timer);
+  }
+
+  closeSlideMenu(event) {
+    event.target.parentElement.parentElement.close();
   }
 }

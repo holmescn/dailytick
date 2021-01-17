@@ -75,25 +75,25 @@ describe('\'activity-tags\' service', () => {
       }, { multi: true }, () => done());
     });
 
-    it('should refresh from `ticks` service', async () => {
-      const ticksService = app.service('ticks');
-      const stub = sinon.stub(ticksService, 'find').returns([{
-        activity: query.activity,
-        tags: ['tag-1', 'tag-2']
-      }, {
-        activity: `${query.activity} 1`,
-        tags: ['tag-1', 'tag-3']
-      }]);
+    // it('should refresh from `ticks` service', async () => {
+    //   const ticksService = app.service('ticks');
+    //   const stub = sinon.stub(ticksService, 'find').returns([{
+    //     activity: query.activity,
+    //     tags: ['tag-1', 'tag-2']
+    //   }, {
+    //     activity: `${query.activity} 1`,
+    //     tags: ['tag-1', 'tag-3']
+    //   }]);
 
-      const svc = app.service('activity-tags');
+    //   const svc = app.service('activity-tags');
 
-      const tags = await svc.find({
-        ...params,
-        query
-      });
+    //   const tags = await svc.find({
+    //     ...params,
+    //     query
+    //   });
 
-      expect(stub.calledOnce).to.be.true;
-      expect(tags.length).to.be.eql(2);
-    });
+    //   expect(stub.calledOnce).to.be.true;
+    //   expect(tags.length).to.be.eql(2);
+    // });
   });
 });

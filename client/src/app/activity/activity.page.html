@@ -11,6 +11,7 @@
       enterkeyhint="done"
       placeholder="描述 #标签"
       [value]="inputText"
+      (ionBlur)="onBlur($event)"
       (ionChange)="onChange($event)"></ion-input>
     <ion-buttons slot="end">
       <ion-button (click)="onOk($event)">

@@ -28,7 +28,7 @@ export class Ticks extends Service {
     };
 
     Promise.all([
-      this.app.service('suggest-activities').create({
+      this.app.service('suggest-activities').update('freq', {
         activity: tickData.activity,
         tickTime: tickData.tickTime
       }, {

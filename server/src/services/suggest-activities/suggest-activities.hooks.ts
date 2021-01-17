@@ -9,7 +9,7 @@ export default {
     all: [ authenticate('jwt') ],
     find: [],
     get: [ disallow('external') ],
-    create: [ disallow('external') ],
+    create: [],
     update: [ disallow('external') ],
     patch:  [ disallow('external') ],
     remove: [ disallow('external') ]
@@ -17,8 +17,8 @@ export default {
 
   after: {
     all: [],
-    find: [ ],
-    get:  [ ],
+    find: [],
+    get:  [],
     create: [],
     update: [],
     patch:  [],

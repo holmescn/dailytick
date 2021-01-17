@@ -1,28 +1,25 @@
-import { Params } from '@feathersjs/feathers';
+import { Id, Params } from '@feathersjs/feathers';
 import { Service, NedbServiceOptions } from 'feathers-nedb';
 import { Application } from '../../declarations';
 
-interface Activity {
-  text: string,
+interface Item {
+  time: number,
+  activity: string,
   freq: number
 }
 
-interface Bucket {
-  timeBucket: number,
-  activities: Activity[]
-}
-
-function sortFn(a: Activity, b: Activity): number {
-  return b.freq - a.freq;
-}
-
-function mapFn(a: Activity): string {
-  return a.text;
+interface UpdateType {
+  $set: {
+    time: number,
+    userId: string,
+    activity: string,
+    freq: number
+  }
 }
 
 export class SuggestActivities extends Service {
   app: Application;
-  roundTo = 10;
+  roundTo = 30;
 
   constructor(options: Partial<NedbServiceOptions>, app: Application) {
     super(options);
@@ -30,59 +27,73 @@ export class SuggestActivities extends Service {
   }
 
   create(data: Partial<any>, params: Params): Promise<any> {
-    if (params.type === 'upsert') {
-      const db = this.getModel(params);
-      const timeBucket = data.timeBucket || this.timeBucket(data.tickTime);
-      return new Promise((resolve, reject) => {
-        db.findOne({
-          timeBucket,
-          userId: params.user._id
-        }, (err, doc) => {
-          if (err) reject(err);
-          const update: {
-            $set: {
-              timeBucket: number,
-              userId: string,
-              activities: Activity[]
-            }
-          } = {
-            $set: {
-              timeBucket,
-              userId: params.user._id,
-              activities: []
-            }
-          };
+    const db = this.getModel(params);
+    const bucket = this.timeBucket(data.tickTime);
+    return new Promise((resolve, reject) => {
+      const query = {
+        time: bucket,
+        activity: data.activity,
+        userId: params.user._id
+      };
+  
+      db.findOne(query, (err, doc) => {
+        if (err) reject(err);
 
-          if (doc) {
-            Array.prototype.push.apply(update.$set.activities, doc.activities);
-          }
-
-          if (data.activity) {
-            const index = update.$set.activities.findIndex(t => t.text === data.activity);
-            if (index < 0) {
-              update.$set.activities.push({
-                text: data.activity,
-                freq: 1
-              });
-            } else {
-              update.$set.activities[index]['freq'] += 1;
+        if (doc) {
+          db.update(query, {
+            $inc: {
+              freq: 1
             }
-          }
-
-          db.update({
-            timeBucket,
-            userId: params.user._id
-          }, update, { upsert: true }, (err, numberOfUpdated) => {
+          }, { upsert: true }, (err) => {
             if (err) reject(err);
-            resolve(numberOfUpdated);
+            resolve({
+              ...doc,
+              freq: doc.freq + 1,
+            });
           });
-        });
+        } else {
+          db.insert({
+            ...query,
+            freq: 1,
+          }, function (err, newDoc) {
+            if (err) reject(err);
+            resolve(newDoc);
+          });
+        }
       });
-    }
+    });
+  }
 
-    return super.create(Object.assign(data, {
-      userId: params.user._id
-    }), params);
+  update(id: Id, data: Partial<any>, params?: Params): Promise<any> {
+    const db = this.getModel(params || {});
+    const bucket = this.timeBucket(data.tickTime);
+    return new Promise((resolve, reject) => {
+      const query = {
+        time: bucket,
+        activity: data.activity,
+        userId: params?.user._id
+      };
+  
+      db.findOne(query, (err, doc) => {
+        if (err) reject(err);
+
+        if (doc) {
+          db.update(query, {
+            $inc: {
+              freq: 1
+            }
+          }, { upsert: true }, (err) => {
+            if (err) reject(err);
+            resolve({
+              ...doc,
+              freq: doc.freq + 1,
+            });
+          });
+        } else {
+          resolve(null);
+        }
+      });
+    });
   }
 
   async find (params: Params): Promise<any> {
@@ -105,120 +116,67 @@ export class SuggestActivities extends Service {
 
   async activitiesInBucket(params: Params, now: number): Promise<string[]> {
     const bucket = this.timeBucket(now);
-    const found: string[] = [];
+    const result: string[] = [];
 
     const query: any = {
-      timeBucket: bucket,
-      'activities.freq': { $gt: 1 },
-      $limit: 1
+      time: bucket,
+      userId: params.user._id,
+      $sort: {
+        freq: -1
+      }
     };
 
-    const f0: Bucket[] = await this.find({
+    const r0: Item[] = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
       query
     });
 
-    if (f0.length > 0) {
-      const activities = f0[0].activities.sort(sortFn);
+    if (r0.length > 0) {
+      const activities = r0.map(item => item.activity);
       for (const a of activities) {
-        if (found.indexOf(a.text) < 0) {
-          found.push(a.text);
+        if (result.indexOf(a) < 0) {
+          result.push(a);
         }
       }
     }
   
-    query.timeBucket = { $lt: bucket };
-    const f1: Bucket[] = await this.find({
+    query.time = { $lt: bucket };
+    const r1: Item[] = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
       query
     });
 
-    if (f1.length > 0) {
-      const activities = f1[0].activities.sort(sortFn);
+    if (r1.length > 0) {
+      const activities = r1.map(item => item.activity);
       for (const a of activities) {
-        if (found.indexOf(a.text) < 0) {
-          found.push(a.text);
+        if (result.indexOf(a) < 0) {
+          result.push(a);
         }
       }
     }
 
-    query.timeBucket = { $gt: bucket };
-    const f2: Bucket[] = await this.find({
+    query.time = { $gt: bucket };
+    const r2: Item[] = await this.find({
       ...params,
       provider: undefined,
       paginate: false,
       query
     });
 
-    if (f2.length > 0) {
-      const activities = f2[0].activities.sort(sortFn);
+    if (r2.length > 0) {
+      const activities = r2.map(item => item.activity);
       for (const a of activities) {
-        if (found.indexOf(a.text) < 0) {
-          found.push(a.text);
+        if (result.indexOf(a) < 0) {
+          result.push(a);
         }
       }
     }
 
-    if (found.length > 0) {
-      return found;
-    }
-
-    return await this.refresh(params, bucket);
-  }
-
-  async refresh(params: Params, bucket: number): Promise<string[]> {
-    const t0 = new Date();
-    t0.setHours(0); t0.setMinutes(0); t0.setSeconds(0); t0.setMilliseconds(0);
-    t0.setMonth(t0.getMonth() - 1); t0.setDate(1);
-    const ticks: {activity: string, tickTime: number}[] = await this.app.service('ticks')._find({
-      ...params,
-      provider: undefined,
-      paginate: false,
-      query: {
-        tickTime: { $gt: t0.getTime() },
-        $sort: { tickTime: 1 },
-        $select: ['activity', 'tickTime']
-      }
-    });
-
-    const m = new Map<number, Activity[]>();
-    for(const tick of ticks) {
-      const timeBucket = this.timeBucket(tick.tickTime);
-      if (m.has(timeBucket)) {
-        const activities = m.get(timeBucket) as Activity[];
-        const index = activities.findIndex(t => t.text === tick.activity);
-        if (index < 0) {
-          activities.push({ text: tick.activity, freq: 1 });
-        } else {
-          activities[index]['freq'] += 1;
-        }
-        m.set(timeBucket, activities);
-      } else {
-        m.set(timeBucket, [{
-          text: tick.activity,
-          freq: 1
-        }]);
-      }
-    }
-
-    Promise.all([...m.entries()].map(item => this.create({
-      timeBucket: item[0],
-      activities: item[1]
-    }, {
-      ...params,
-      type: 'upsert',
-      provider: undefined
-    })));
-
-    if (m.has(bucket)) {
-      const activities = m.get(bucket) as Activity[];
-      return activities.sort(sortFn).map(mapFn);
-    }
-    return [];
+    return result;
   }
 
   timeBucket(ts: number): number {
