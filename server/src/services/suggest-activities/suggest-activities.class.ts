@@ -142,6 +142,7 @@ export class SuggestActivities extends Service {
       }
     }
   
+    /*
     query.time = { $lt: bucket };
     const r1: Item[] = await this.find({
       ...params,
@@ -175,6 +176,7 @@ export class SuggestActivities extends Service {
         }
       }
     }
+    */
 
     return result;
   }
