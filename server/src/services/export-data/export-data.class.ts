@@ -14,7 +14,15 @@ interface Tick {
   endTime: number
 }
 
-export class ExportCsv implements Partial<ServiceMethods<Data>> {
+interface Record {
+  activity: string,
+  start: number,
+  end: number,
+  duration: number,
+  tags: string[]
+}
+
+export class ExportData implements Partial<ServiceMethods<Data>> {
   app: Application;
   options: ServiceOptions;
 
@@ -24,10 +32,10 @@ export class ExportCsv implements Partial<ServiceMethods<Data>> {
   }
 
   async get (id: Id, params?: Params): Promise<Data> {
-    if (id === 'daily-details') {
-      return this.exportDailyDetails(params);
-    } else if (id === 'daily-tags') {
-      return this.exportDailyTags(params);
+    if (id === 'daily-details-csv') {
+      return this.exportDailyDetailsCSV(params);
+    } else if (id === 'daily-details-json') {
+      return this.exportDailyDetailsJSON(params);
     } else {
       return {
         code: -1,
@@ -36,7 +44,7 @@ export class ExportCsv implements Partial<ServiceMethods<Data>> {
     }
   }
 
-  async exportDailyDetails(params?: Params): Promise<Data> {
+  async exportDailyDetailsCSV(params?: Params): Promise<Data> {
     const ticks: Tick[] = await this.findAllTicks(params);
 
     // ,,tag::date{}
@@ -88,11 +96,52 @@ export class ExportCsv implements Partial<ServiceMethods<Data>> {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async exportDailyTags(params?: Params): Promise<Data> {
+  async exportDailyDetailsJSON(params?: Params): Promise<Data> {
+    const ticks: Tick[] = await this.findAllTicks(params);
+
+    // {
+    //   "D20200101": [{
+    //     "activity": "",
+    //     "start": "",
+    //     "stop": "",
+    //     "duration": "",
+    //     "tags": [],
+    //   }]
+    // }
+    const data: any = {};
+    ticks.forEach((tick: Tick) => {
+      const h = 86400;
+      // const t0 = new Date(tick.tickTime + 8 * h);
+      const t1 = new Date(tick.endTime  + 8 * h);
+      const duration = Math.floor((tick.endTime - tick.tickTime) / 1000);
+      const key = this.dateTag(t1).replace('tag::', 'D').replace('[]', '');
+
+      const record: Record = {
+        activity: tick.activity,
+        start: tick.tickTime,
+        end: tick.endTime,
+        duration,
+        tags: tick.tags
+      }
+
+      if (data[key]) {
+        data[key].push(record);
+      } else {
+        data[key] = [record];
+      }
+    });
+
+    const fn = `daily-details-${params?.user._id}.json`;
+    const folder = path.resolve(`${__dirname}/../../../public`);
+    const fullPath = `${folder}/${fn}`;
+    fs.writeFileSync(fullPath, JSON.stringify(data, null, 2));
+
+    // remove after 1 minute
+    this.removeFile(fullPath);
+
     return {
       code: 0,
-      message: ''
+      filename: `${fn}`
     };
   }
 

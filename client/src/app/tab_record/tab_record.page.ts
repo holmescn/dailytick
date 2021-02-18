@@ -3,7 +3,8 @@ import { IonInfiniteScroll,
          IonVirtualScroll,
          IonDatetime,
          AlertController,
-         ModalController } from '@ionic/angular';
+         ModalController, 
+         ToastController} from '@ionic/angular';
 import { ActivityPage } from '../activity/activity.page';
 import { FeathersService } from '../services/feathers.service';
 import { FormatterService } from '../services/formatter.service';
@@ -35,6 +36,7 @@ export class TabRecordPage implements OnInit, OnDestroy {
 
   constructor(private modal: ModalController,
               private alert: AlertController,
+              private toast: ToastController,
               private feathers: FeathersService,
               private formatter: FormatterService) {
     this.service = this.bindServiceEvents();
@@ -162,30 +164,23 @@ export class TabRecordPage implements OnInit, OnDestroy {
 
   async faviTick(event, tick) {
     this.closeSlideMenu(event);
-    const alert = await this.alert.create({
-      header: '确定要收藏',
-      message: tick.activity,
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-          cssClass: 'secondary',
-          handler: () => {
-            //
-          }
-        }, {
-          text: 'Okay',
-          handler: () => {
-            this.feathers.service("suggest-activities").create({
-              tickTime: tick.tickTime,
-              activity: tick.activity
-            });
-          }
-        }
-      ]
-    });
-
-    await alert.present();
+    try {
+      await this.feathers.service("suggest-activities").create({
+        tickTime: tick.tickTime,
+        activity: tick.activity
+      });
+      const toast = await this.toast.create({
+        message: '收藏成功.',
+        duration: 2000
+      });
+      toast.present();
+    } catch (e) {
+      const toast = await this.toast.create({
+        message: '收藏失败.',
+        duration: 2000
+      });
+      toast.present();
+    }
   }
 
   async loadData(tickTime: number) {

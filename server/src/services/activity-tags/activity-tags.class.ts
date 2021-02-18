@@ -25,11 +25,7 @@ export class ActivityTags extends Service {
           $set: {
             activity: data.activity,
             userId: params.user._id,
-          },
-          $addToSet: {
-            tags: {
-              $each: data.tags
-            }
+            tags: data.tags,
           }
         }, {
           upsert: true

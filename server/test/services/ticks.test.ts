@@ -128,8 +128,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2020-10-19 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2020-10-20 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2020-10-18T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2020-10-19T16:00:00.000Z');
     });
     it('should return yesterday\'s start and end time for given `now`', () => {
       const now = new Date(2020, 9, 19).getTime();
@@ -137,8 +137,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2020-10-18 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2020-10-19 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2020-10-17T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2020-10-18T16:00:00.000Z');
     });
     it('should return this-week\'s start and end time for given `now`, Sun', () => {
       // 2020-10-12 Mon - 2020-10-19 Mon
@@ -147,8 +147,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2020-10-12 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2020-10-19 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2020-10-11T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2020-10-18T16:00:00.000Z');
     });
     it('should return this-week\'s start and end time for given `now`, Mon', () => {
       // 2020-10-19 Mon - 2020-10-26 Mon
@@ -157,8 +157,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2020-10-19 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2020-10-26 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2020-10-18T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2020-10-25T16:00:00.000Z');
     });
     it('should return this-week\'s start and end time for given `now`, Wed', () => {
       // 2020-10-19 Mon - 2020-10-26 Mon
@@ -167,8 +167,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2020-10-19 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2020-10-26 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2020-10-18T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2020-10-25T16:00:00.000Z');
     });
     it('should return last-week\'s start and end time for given `now`, Sun', () => {
       // 2020-10-05 Mon - 2020-10-12 Mon
@@ -177,8 +177,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2020-10-5 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2020-10-12 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2020-10-04T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2020-10-11T16:00:00.000Z');
     });
     it('should return last-week\'s start and end time for given `now`, Mon', () => {
       // 2020-10-12 Mon - 2020-10-19 Mon
@@ -187,8 +187,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2020-10-12 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2020-10-19 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2020-10-11T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2020-10-18T16:00:00.000Z');
     });
     it('should return last-week\'s start and end time for given `now`, Wed', () => {
       // 2020-10-12 Mon - 2020-10-19 Mon
@@ -197,8 +197,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2020-10-12 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2020-10-19 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2020-10-11T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2020-10-18T16:00:00.000Z');
     });
     it('should return this-month\'s start and end time for given `now`', () => {
       // 2020-10-05 Mon - 2020-10-12 Mon
@@ -207,8 +207,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2020-10-1 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2020-11-1 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2020-09-30T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2020-10-31T16:00:00.000Z');
     });
     it('should return this-month\'s start and end time for given `now`, Dec', () => {
       // 2020-10-05 Mon - 2020-10-12 Mon
@@ -217,8 +217,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2020-12-1 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2021-1-1 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2020-11-30T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2020-12-31T16:00:00.000Z');
     });
     it('should return last-month\'s start and end time for given `now`', () => {
       // 2020-10-05 Mon - 2020-10-12 Mon
@@ -227,8 +227,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2020-9-1 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2020-10-1 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2020-08-31T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2020-09-30T16:00:00.000Z');
     });
     it('should return last-month\'s start and end time for given `now`, Jan', () => {
       const now = new Date(2020, 0, 18).getTime();
@@ -236,8 +236,8 @@ describe('\'ticks\' service', () => {
       const t1 = new Date(startTime);
       const t2 = new Date(endTime);
 
-      expect(t1.toLocaleString()).to.be.eql('2019-12-1 0:00:00');
-      expect(t2.toLocaleString()).to.be.eql('2020-1-1 0:00:00');
+      expect(t1.toISOString()).to.be.eql('2019-11-30T16:00:00.000Z');
+      expect(t2.toISOString()).to.be.eql('2019-12-31T16:00:00.000Z');
     });
   });
 });

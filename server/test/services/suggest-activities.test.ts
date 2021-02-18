@@ -1,5 +1,4 @@
 import chai from 'chai';
-import sinon from 'sinon';
 import faker from 'faker';
 import app from '../../src/app';
 

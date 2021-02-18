@@ -1,6 +1,5 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
-import { tick } from '@angular/core/testing';
-import { IonInput, ModalController } from '@ionic/angular';
+import { Component, Input, OnInit } from '@angular/core';
+import { ModalController } from '@ionic/angular';
 import { Tick } from '../interfaces/tick';
 import { FeathersService } from '../services/feathers.service';
 
@@ -17,10 +16,11 @@ interface Suggest {
 export class ActivityPage implements OnInit {
   @Input() tickId: string;
   @Input() ticks: Tick[];
-  @ViewChild(IonInput) inputBox: IonInput;
 
+  timer?: number;
   tick: Tick;
   inputText: string;
+  cachedText: string;
   listHeader: string;
   suggests: Suggest[] = [];
 
@@ -58,8 +58,7 @@ export class ActivityPage implements OnInit {
 
     const suggests: Suggest[] = suggestsByTime.map(a => Object.assign({ text: a }));
 
-    for (let i = 0; i < Math.min(10, this.ticks.length); ++i) {
-      const tick = this.ticks[i];
+    for (const tick of this.ticks) {
       const index = suggests.findIndex(a => a.text === tick.activity);
       if (index < 0) {
         suggests.push({
@@ -136,7 +135,7 @@ export class ActivityPage implements OnInit {
     }
   }
 
-  extractTick(text: string): string {
+  updateTick(text: string): void {
     const tags: string[] = [];
     const activity = text.replace(/#[^#]+(\s+|$)/g, (tag: string) => {
       tags.push(tag.substring(1).trim());
@@ -144,28 +143,34 @@ export class ActivityPage implements OnInit {
     }).trim();
 
     this.tick.tags = tags.filter(t => t.length > 0);
-  
-    return activity;    
-  }
-
-  async onBlur(event: CustomEvent) {
-    const activity = this.extractTick(this.inputText);
-    if (activity.length > 0) {
-      this.listHeader = '选择标签';
-      this.tick.activity = activity;
-      this.suggests = await this.loadSuggestTags();
-      this.checkTags(this.suggests, this.tick.tags);
-    } else {
-      this.listHeader = '选择活动';
-      this.suggests = await this.loadSuggestActivities();
-    }
-
-    this.inputText = this.formatText(this.tick);
+    this.tick.activity = activity;
   }
 
   async onChange(event: CustomEvent) {
+    const self = this;
     const value = event.detail.value;
-    this.inputText = value;
+    if (this.timer) {
+      window.clearTimeout(this.timer);
+    }
+    this.timer = window.setTimeout(() => {
+      self.timer = null;
+
+      self.updateTick(self.cachedText);
+
+      if (self.tick.activity.length > 0) {
+        self.listHeader = '选择标签';
+        self.loadSuggestTags().then(tags => {
+          self.suggests = tags;
+          self.checkTags(self.suggests, self.tick.tags);
+        });
+      } else {
+        this.listHeader = '选择活动';
+        self.loadSuggestActivities().then(suggests => self.suggests = suggests);
+      }
+  
+      self.inputText = self.formatText(self.tick);
+    }, 10*1000);
+    this.cachedText = value;
   }
 
   async onClickItem(item: string) {
@@ -205,7 +210,7 @@ export class ActivityPage implements OnInit {
   }
 
   onOk(event: Event) {
-    this.tick.activity = this.extractTick(this.inputText);
+    this.updateTick(this.cachedText);
     this.modal.dismiss({ action: 'ok', activity: this.tick.activity, tags: this.tick.tags });
   }
 

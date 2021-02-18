@@ -1,5 +1,4 @@
 import chai from 'chai';
-import sinon from 'sinon';
 import faker from 'faker';
 import app from '../../src/app';
 import TicksService from '../../src/services/ticks/ticks.service';
@@ -57,17 +56,13 @@ describe('\'activity-tags\' service', () => {
       });
 
       const updated = await svc.get(created._id, params);
-      console.log(updated);
+      // console.log(updated);
 
-      expect(updated.tags.length).to.be.eql(5);
+      expect(updated.tags.length).to.be.eql(2);
     });
   });
 
   describe('`find` method', () => {
-    const query = {
-      activity: faker.lorem.words(3)
-    };
-
     afterEach((done) => {  
       const db = app.service('activity-tags').getModel(params);
       db.remove({

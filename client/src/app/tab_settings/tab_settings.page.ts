@@ -25,14 +25,39 @@ export class TabSettingsPage {
     this.darkTheme = event.detail.checked;
   }
 
-  async exportDailyDetails(event: CustomEvent) {
-    const response = await this.feathers.service("export-csv").get('daily-details');
+  async exportDailyDetailsCSV(_event: CustomEvent) {
+    const response = await this.feathers.service("export-data").get('daily-details-csv');
     console.log(response);
     if (response.code === 0) {
       const url = (environment.production
                   ? `${environment.serverUrl}/download/${response.filename}`
                   : `${environment.serverUrl}/${response.filename}`);
-      window.open(url, '_blank');
+      this.download(url, response.filename);
     }
+  }
+
+  async exportDailyDetailsJSON(_event: CustomEvent) {
+    const response = await this.feathers.service("export-data").get('daily-details-json');
+    console.log(response);
+    if (response.code === 0) {
+      const url = (environment.production
+                  ? `${environment.serverUrl}/download/${response.filename}`
+                  : `${environment.serverUrl}/${response.filename}`);
+      this.download(url, response.filename);
+    }
+  }
+
+  download(url: string, filename: string) {
+    const element = document.createElement('a');
+    element.href = url;
+    element.target = "_blank";
+    element.download = filename.replace(/(daily-details)-[\w\d]+\.(csv|json)/, "$1.$2");
+    document.body.appendChild(element);
+    setTimeout(() => {
+      element.click();
+    }, 1000);
+    setTimeout(() => {
+      document.body.removeChild(element);
+    }, 1000);
   }
 }

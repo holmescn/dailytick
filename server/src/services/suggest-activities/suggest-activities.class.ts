@@ -8,15 +8,6 @@ interface Item {
   freq: number
 }
 
-interface UpdateType {
-  $set: {
-    time: number,
-    userId: string,
-    activity: string,
-    freq: number
-  }
-}
-
 export class SuggestActivities extends Service {
   app: Application;
   roundTo = 30;
