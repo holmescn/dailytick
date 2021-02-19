@@ -15,7 +15,6 @@ export class ActivityTags extends Service {
   }
 
   create(data: Partial<any>, params: Params): Promise<any> {
-    console.log(data);
     if (params.type === 'upsert') {
       const db = this.getModel(params);
       return new Promise((resolve, reject) => {
@@ -50,8 +49,6 @@ export class ActivityTags extends Service {
         userId: params?.user._id
       }
     });
-
-    console.log(results);
 
     if (results.length > 0) {
       const tags: string[] = [];
