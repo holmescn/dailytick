@@ -15,6 +15,7 @@ export class ActivityTags extends Service {
   }
 
   create(data: Partial<any>, params: Params): Promise<any> {
+    console.log(data);
     if (params.type === 'upsert') {
       const db = this.getModel(params);
       return new Promise((resolve, reject) => {
@@ -25,7 +26,7 @@ export class ActivityTags extends Service {
           $set: {
             activity: data.activity,
             userId: params.user._id,
-            tags: data.tags,
+            tags: data.tags
           }
         }, {
           upsert: true
@@ -44,13 +45,22 @@ export class ActivityTags extends Service {
     const results = await super.find({
       ...params,
       paginate: false,
-      query: Object.assign(params?.query, {
+      query: {
+        ...params?.query,
         userId: params?.user._id
-      })
+      }
     });
 
+    console.log(results);
+
     if (results.length > 0) {
-      const tags = results.reduce((arr, item) => [...arr, ...item.tags], []);
+      const tags: string[] = [];
+      for (const item of results) {
+        if (item.tags) {
+          tags.push(...item.tags);
+        }
+      }
+
       return {
         total: tags.length,
         limit: tags.length,
@@ -71,7 +81,7 @@ export class ActivityTags extends Service {
   async refresh(params: Params): Promise<any> {
     const t0 = new Date();
     t0.setHours(0); t0.setMinutes(0); t0.setSeconds(0); t0.setMilliseconds(0);
-    t0.setDate(1); t0.setMonth(t0.getMonth() - 1);
+    t0.setDate(1); t0.setMonth(t0.getMonth() - 2);
 
     const ticks: Tick[] = await this.app.service('ticks').find({
       ...params,
@@ -79,7 +89,7 @@ export class ActivityTags extends Service {
       paginate: false,
       query: {
         tickTime: { $gt: t0.getTime() },
-        $sort: { tickTime: 1 },
+        $sort: { tickTime: -1 },
         $select: ['activity', 'tags']
       }
     });
@@ -90,20 +100,12 @@ export class ActivityTags extends Service {
       if (!m.has(activity)) {
         m.set(activity, {
           activity,
-          tags: new Set<string>(),
-          freq: 0,
+          tags: tick.tags
         });
       }
-      const entry: {tags: Set<string>, freq: number} = m.get(activity);
-      entry.freq += 1;
-      tick.tags.forEach(tag => entry.tags.add(tag));
-      m.set(activity, entry);
     }
 
-    Promise.all([...m.values()].map(item => this.create({
-      activity: item.activity,
-      tags: item.tags
-    }, {
+    Promise.all([...m.values()].map(item => this.create(item, {
       ...params,
       type: 'upsert',
       provider: undefined

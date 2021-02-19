@@ -148,29 +148,35 @@ export class ActivityPage implements OnInit {
 
   async onChange(event: CustomEvent) {
     const self = this;
-    const value = event.detail.value;
+    this.cachedText = event.detail.value;
+
     if (this.timer) {
       window.clearTimeout(this.timer);
     }
-    this.timer = window.setTimeout(() => {
-      self.timer = null;
 
-      self.updateTick(self.cachedText);
-
-      if (self.tick.activity.length > 0) {
-        self.listHeader = '选择标签';
-        self.loadSuggestTags().then(tags => {
-          self.suggests = tags;
-          self.checkTags(self.suggests, self.tick.tags);
-        });
-      } else {
-        this.listHeader = '选择活动';
-        self.loadSuggestActivities().then(suggests => self.suggests = suggests);
+    if (this.cachedText === '') {
+      this.listHeader = '选择活动';
+      this.suggests = await this.loadSuggestActivities();
+    } else {
+      if (this.listHeader === '选择活动') {
+        this.listHeader = '选择标签';
+        this.suggests = [];  
       }
+
+      this.timer = window.setTimeout(() => {
+        self.timer = null;
   
-      self.inputText = self.formatText(self.tick);
-    }, 10*1000);
-    this.cachedText = value;
+        self.updateTick(self.cachedText);
+  
+        if (self.tick.activity.length > 0) {
+          self.loadSuggestTags().then((tags) => {
+            self.suggests = tags;
+            self.checkTags(self.suggests, self.tick.tags);
+            self.inputText = self.formatText(self.tick);
+          });
+        }  
+      }, 5*1000);
+    }
   }
 
   async onClickItem(item: string) {
