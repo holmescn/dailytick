@@ -15,11 +15,13 @@ export class Tags extends Service<Tag> {
   }
 
   async find(params: Params): Promise<any> {
-    const results = await super.find(Object.assign(params, {
-      query: Object.assign(params.query, {
-        userId: params.user._id
-      })
-    }));
+    const results = await super.find({
+      ...params,
+      query: {
+        ...params.query,
+        userId: params.user?._id
+      }
+    });
 
     if (results.total > 0) {
       return results;
@@ -35,13 +37,13 @@ export class Tags extends Service<Tag> {
       const update = data.freq ? {
         $set: {
           tag: data.tag,
-          userId: params.user._id,
+          userId: params.user?._id,
           freq: data.freq
         }
       } : {
         $set: {
           tag: data.tag,
-          userId: params.user._id,
+          userId: params.user?._id,
         },
         $inc: { freq: 1 }
       };
@@ -49,7 +51,7 @@ export class Tags extends Service<Tag> {
       return new Promise((resolve, reject) => {
         db.update({
           tag: data.tag,
-          userId: params.user._id,
+          userId: params.user?._id,
         }, update, {
           upsert: true
         }, (err: Error|null, numberOfUpdated: number, upsert: boolean) => {
@@ -60,7 +62,7 @@ export class Tags extends Service<Tag> {
     }
     return super.create({
       ...data,
-      userId: params.user._id
+      userId: params.user?._id
     }, params);
   }
 

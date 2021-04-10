@@ -20,11 +20,11 @@ export class ActivityTags extends Service {
       return new Promise((resolve, reject) => {
         db.update({
           activity: data.activity,
-          userId: params.user._id
+          userId: params.user?._id
         }, {
           $set: {
             activity: data.activity,
-            userId: params.user._id,
+            userId: params.user?._id,
             tags: data.tags
           }
         }, {
@@ -36,7 +36,7 @@ export class ActivityTags extends Service {
       });
     }
     return super.create(Object.assign(data, {
-      userId: params.user._id
+      userId: params.user?._id
     }), params);
   }
 
@@ -46,7 +46,7 @@ export class ActivityTags extends Service {
       paginate: false,
       query: {
         ...params?.query,
-        userId: params?.user._id
+        userId: params?.user?._id
       }
     });
 

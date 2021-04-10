@@ -7,13 +7,12 @@
     </ion-buttons>
     <ion-input
       type="text"
-      debounce="1000"
       enterkeyhint="done"
       placeholder="描述 #标签"
       [value]="inputText"
-      (ionChange)="onChange($event)"></ion-input>
+      (ionChange)="onInputChange($event)"></ion-input>
     <ion-buttons slot="end">
-      <ion-button (click)="onOk($event)">
+      <ion-button (click)="onOk()">
         <ion-icon slot="icon-only" name="checkmark-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -23,7 +22,16 @@
 <ion-content [fullscreen]="true">
   <ion-list>
     <ion-list-header>
-      <ion-label class="list-header-text">{{ listHeader }}</ion-label>
+      <ion-toolbar>
+        <ion-segment (ionChange)="onSegmentChange($event)" [value]="segment">
+          <ion-segment-button value="activities">
+            <ion-label>活动</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="tags">
+            <ion-label>标签</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </ion-toolbar>
     </ion-list-header>
     <ion-item *ngFor="let item of suggests" (click)="onClickItem(item.text)">
       <ion-label>{{ item.text }}</ion-label>

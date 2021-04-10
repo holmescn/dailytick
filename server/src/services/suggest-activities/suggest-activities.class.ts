@@ -24,7 +24,7 @@ export class SuggestActivities extends Service {
       const query = {
         time: bucket,
         activity: data.activity,
-        userId: params.user._id
+        userId: params.user?._id
       };
   
       db.findOne(query, (err, doc) => {
@@ -62,7 +62,7 @@ export class SuggestActivities extends Service {
       const query = {
         time: bucket,
         activity: data.activity,
-        userId: params?.user._id
+        userId: params?.user?._id
       };
   
       db.findOne(query, (err, doc) => {
@@ -100,7 +100,7 @@ export class SuggestActivities extends Service {
 
     return await super.find(Object.assign(params, {
       query: Object.assign(params?.query, {
-        userId: params.user._id
+        userId: params.user?._id
       })
     }));
   }
@@ -111,7 +111,7 @@ export class SuggestActivities extends Service {
 
     const query: any = {
       time: bucket,
-      userId: params.user._id,
+      userId: params.user?._id,
       $sort: {
         freq: -1
       }

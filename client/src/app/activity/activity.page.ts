@@ -1,5 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { ModalController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { Tick } from '../interfaces/tick';
 import { FeathersService } from '../services/feathers.service';
 
@@ -14,39 +16,78 @@ interface Suggest {
   styleUrls: ['./activity.page.scss'],
 })
 export class ActivityPage implements OnInit {
-  @Input() tickId: string;
-  @Input() ticks: Tick[];
+  @Input() readonly tickId: string;
+  @Input() readonly ticks: Tick[];
 
-  timer?: number;
-  tick: Tick;
+  activity: string;
+  tags: string[];
   inputText: string;
-  cachedText: string;
-  listHeader: string;
-  suggests: Suggest[] = [];
+  segment = "activities";
+  suggests: Suggest[];
+  subject = new Subject();
+  token: any;
 
-  constructor(private modal: ModalController, private feathers: FeathersService) { }
+  constructor(private modal: ModalController, private feathers: FeathersService) {
+    this.token = null;
+  }
 
-  async ngOnInit() {
+  ngOnInit() {
+    this.subject.pipe(
+      debounceTime(1000),
+    ).subscribe((text: string) => {
+      this.loadSuggests(text).then(suggests => {
+        if (suggests instanceof Array) {
+          this.suggests = suggests;
+        }
+      });
+    });
+
     if (this.tickId === 'new') {
-      this.tick = {
-        _id: 'new',
-        activity: '',
-        tags: [],
-        tickTime: 0
-      }
-      this.suggests = await this.loadSuggestActivities();
-      this.listHeader = '选择活动';
+      this.activity = '';
+      this.tags = [];
+      this.segment = "activities";
     } else {
       const tick = this.ticks.find(t => t._id === this.tickId);
-      this.tick = {
-        ...tick,
-        tags: [...tick.tags]
-      };
-      this.listHeader = '选择标签';
-      this.suggests = await this.loadSuggestTags();
-      this.checkTags(this.suggests, this.tick.tags);
+      this.activity = tick.activity;
+      this.tags = [...tick.tags];
+      this.segment = "tags";
     }
-    this.inputText = this.formatText(this.tick);
+
+    this.updateInput(this.activity, this.tags);
+    window.setTimeout(() => {
+      this.subject.next(this.inputText);
+    }, 100);
+  }
+
+  async loadSuggests(text: string): Promise<Suggest[] | void> {
+    // console.log(`loadSuggests: ${text}`);
+
+    let cancelled = false;
+    this.token = {
+      cancel: () => {
+        cancelled = true;
+        console.log(`cancel: ${text}`);
+      }
+    };
+
+    if (cancelled) return;
+    if (text === '') {
+      const suggests = await this.loadSuggestActivities();
+      if (cancelled) return;
+      this.segment = "activities";
+      return suggests;
+    } else {
+      const tick = this.extractTick(text);
+      if (cancelled) return;
+      const suggests = await this.loadSuggestTags(tick);
+      if (cancelled) return;
+      this.segment = 'tags';
+      this.activity = tick.activity;
+      this.tags = [...tick.tags];
+      this.checkTags(suggests, tick.tags);
+      this.updateInput(this.activity, this.tags);
+      return suggests;
+    }
   }
 
   async loadSuggestActivities(): Promise<Suggest[]> {
@@ -70,12 +111,12 @@ export class ActivityPage implements OnInit {
     return suggests;
   }
 
-  async loadSuggestTags(): Promise<Suggest[]> {
+  async loadSuggestTags(tick: Tick): Promise<any> {
     const suggests: Suggest[] = [];
 
     const { data: tags } = await this.feathers.service('activity-tags').find({
       query: {
-        activity: this.tick.activity
+        activity: tick.activity
       }
     });
 
@@ -87,15 +128,15 @@ export class ActivityPage implements OnInit {
     }
 
     for (const item of suggests) {
-      if (this.tick.tags.indexOf(item.text) < 0) {
-        this.tick.tags.push(item.text);
+      if (tick.tags.indexOf(item.text) < 0) {
+        tick.tags.push(item.text);
       }
     }
 
     const { data: frequent } = await this.feathers.service('tags').find({
       query: {
         $sort: { freq: -1 },
-        $limit: 10,
+        $limit: 20,
         $select: ['tag']
       }
     });
@@ -126,87 +167,89 @@ export class ActivityPage implements OnInit {
     return suggests;
   }
 
-  formatText(tick: Tick): string {
-    if (tick.tags.length > 0) {
-      const tags = tick.tags.join(' #');
-      return `${tick.activity} #${tags}`;
+  updateInput(activity: string, tags: string[]): void {
+    // console.log(`updateText: ${activity}, ${tags.join(',')}`);
+    if (tags.length > 0) {
+      const tagsStr = tags.join(' #');
+      this.inputText = `${activity} #${tagsStr}`;
     } else {
-      return tick.activity;
+      this.inputText = activity;
     }
   }
 
-  updateTick(text: string): void {
+  extractTick(text: string): Tick {
     const tags: string[] = [];
     const activity = text.replace(/#[^#]+(\s+|$)/g, (tag: string) => {
       tags.push(tag.substring(1).trim());
       return '';
     }).trim();
 
-    this.tick.tags = tags.filter(t => t.length > 0);
-    this.tick.activity = activity;
+    return {
+      _id: '',
+      activity,
+      tags,
+      tickTime: 0
+    }
   }
 
-  async onChange(event: CustomEvent) {
-    const self = this;
-    this.cachedText = event.detail.value;
-
-    if (this.timer) {
-      window.clearTimeout(this.timer);
+  async onInputChange(event: CustomEvent) {
+    const text = event.detail.value;
+    if (this.token) {
+      this.token.cancel();
     }
+    this.subject.next(text);
+  }
 
-    if (this.cachedText === '') {
-      this.listHeader = '选择活动';
-      this.suggests = await this.loadSuggestActivities();
-    } else {
-      if (this.listHeader === '选择活动') {
-        this.listHeader = '选择标签';
-        this.suggests = [];  
+  async onSegmentChange(event: CustomEvent) {
+    const sel = event.detail.value;
+    if (sel === 'tags') {
+      if (this.activity === '') {
+        this.segment = 'activities';
+      } else {
+        const tick = {
+          _id: '',
+          activity: this.activity,
+          tags: this.tags,
+          tickTime: 0
+        };
+        this.suggests = await this.loadSuggestTags(tick);
+        this.tags = [...tick.tags];
+        this.checkTags(this.suggests, tick.tags);
+        this.segment = 'tags';
       }
-
-      this.timer = window.setTimeout(() => {
-        self.timer = null;
-  
-        self.updateTick(self.cachedText);
-  
-        if (self.tick.activity.length > 0) {
-          self.loadSuggestTags().then((tags) => {
-            self.suggests = tags;
-            self.checkTags(self.suggests, self.tick.tags);
-            self.inputText = self.formatText(self.tick);
-          });
-        }  
-      }, 5*1000);
+    } else {
+      this.suggests = await this.loadSuggestActivities();
+      this.segment = 'activities';
     }
   }
 
-  async onClickItem(item: string) {
-    if (this.tick.activity === '') {
-      await this.clickActivity(item);
+  onClickItem(item: string) {
+    if (this.segment === 'activities') {
+      this.clickActivity(item);
     } else {
       this.toggleTag(item);
     }
   }
 
   async clickActivity(activity: string) {
-    this.listHeader = '选择标签';
-    this.tick.activity = activity;
-    this.suggests = await this.loadSuggestTags();
-    this.checkTags(this.suggests, this.tick.tags);
-    this.inputText = this.formatText(this.tick);
+    this.activity = activity;
+    this.inputText = activity;
+    this.tags = [];
+    this.subject.next(activity);
   }
 
   toggleTag(tag: string) {
-    const index = this.tick.tags.indexOf(tag);
+    const index = this.tags.indexOf(tag);
     const item = this.suggests.find(s => s.text === tag);
     if (index < 0) {
-      this.tick.tags.push(tag);
+      this.tags.push(tag);
       item.checked = true;
     } else {
-      this.tick.tags.splice(index, 1);
+      this.tags.splice(index, 1);
       item.checked = false;
     }
 
-    this.inputText = this.formatText(this.tick);
+    this.updateInput(this.activity, this.tags);
   }
 
   checkTags(suggests: Suggest[], tags: string[]) {
@@ -215,12 +258,11 @@ export class ActivityPage implements OnInit {
     }
   }
 
-  onOk(event: Event) {
-    this.updateTick(this.cachedText);
-    this.modal.dismiss({ action: 'ok', activity: this.tick.activity, tags: this.tick.tags });
+  onOk() {
+    this.modal.dismiss({ action: 'ok', activity: this.activity, tags: this.tags });
   }
 
-  onCancel(event: Event) {
+  onCancel() {
     this.modal.dismiss({ action: 'cancel' });
   }
 }

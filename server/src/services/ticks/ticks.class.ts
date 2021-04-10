@@ -14,7 +14,7 @@ export class Ticks extends Service {
       ...params,
       query: {
         ...params.query,
-        userId: params.user._id
+        userId: params.user?._id
       }
     });
   }
@@ -23,7 +23,7 @@ export class Ticks extends Service {
   create (data: any, params: Params): Promise<any> {
     const tickData = {
       ...data,
-      userId: params.user._id,
+      userId: params.user?._id,
       tags: data.tags || []
     };
 

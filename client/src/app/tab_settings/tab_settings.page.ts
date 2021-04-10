@@ -27,7 +27,7 @@ export class TabSettingsPage {
 
   async exportDailyDetailsCSV(_event: CustomEvent) {
     const response = await this.feathers.service("export-data").get('daily-details-csv');
-    console.log(response);
+    // console.log(response);
     if (response.code === 0) {
       const url = (environment.production
                   ? `${environment.serverUrl}/download/${response.filename}`
@@ -38,7 +38,7 @@ export class TabSettingsPage {
 
   async exportDailyDetailsJSON(_event: CustomEvent) {
     const response = await this.feathers.service("export-data").get('daily-details-json');
-    console.log(response);
+    // console.log(response);
     if (response.code === 0) {
       const url = (environment.production
                   ? `${environment.serverUrl}/download/${response.filename}`

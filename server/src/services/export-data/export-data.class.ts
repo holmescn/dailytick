@@ -82,7 +82,7 @@ export class ExportData implements Partial<ServiceMethods<Data>> {
     lines.push(`共计,,${this.formatDuration(totalDuration)},`);
     lines.push(`,,, ${_dateTag.replace('tag', 'end')}`);
 
-    const fn = `daily-details-${params?.user._id}.csv`;
+    const fn = `daily-details-${params?.user?._id}.csv`;
     const folder = path.resolve(`${__dirname}/../../../public`);
     const fullPath = `${folder}/${fn}`;
     fs.writeFileSync(fullPath, lines.join('\n'));
@@ -131,7 +131,7 @@ export class ExportData implements Partial<ServiceMethods<Data>> {
       }
     });
 
-    const fn = `daily-details-${params?.user._id}.json`;
+    const fn = `daily-details-${params?.user?._id}.json`;
     const folder = path.resolve(`${__dirname}/../../../public`);
     const fullPath = `${folder}/${fn}`;
     fs.writeFileSync(fullPath, JSON.stringify(data, null, 2));

@@ -13,11 +13,7 @@ export class EditPage implements OnInit {
   constructor(public modalController: ModalController) { }
 
   ngOnInit() {
-    setTimeout(() => {
-      this.inputBox.setFocus().then(() => {
-        console.log("Set Focus");
-      });
-    }, 500);
+    
   }
 
   onChange(event) {
