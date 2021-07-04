@@ -20,10 +20,14 @@ ion-item p {
   width: 95%;
 }
 
-ion-item .date {
+ion-item .time, ion-item .duration {
   float: right;
   align-items: center;
   display: flex;
+}
+
+ion-item .duration {
+  font-size: 0.8em;
 }
 
 ion-item ion-icon {
@@ -40,17 +44,13 @@ ion-item ion-note.md {
   margin-right: 14px;
 }
 
-.dot {
+.gap {
   display: block;
   height: 12px;
   width: 12px;
   border-radius: 50%;
   align-self: start;
-  margin: 16px 10px 16px 16px;
-}
-
-.dot-unread {
-  background: var(--ion-color-primary);
+  margin: 0;
 }
 
 ion-footer ion-title {
