@@ -1,31 +1,20 @@
 import React, { useState } from 'react';
-import {
-  IonHeader, IonToolbar, IonTitle,
-  IonFooter, IonContent, IonPage,
-  IonButtons, IonRow, IonCol,
-  IonButton, IonList, IonItem,
-  IonLabel, IonInput, IonText, IonToggle } from '@ionic/react';
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonButtons, IonMenuButton, IonRow, IonCol, IonButton, IonList, IonItem, IonLabel, IonInput, IonText } from '@ionic/react';
 import './Login.scss';
 import { setIsLoggedIn, setUsername } from '../data/user/user.actions';
 import { connect } from '../data/connect';
 import { RouteComponentProps } from 'react-router';
-import { setDarkMode } from '../data/user/user.actions';
 
 interface OwnProps extends RouteComponentProps {}
 
-interface StateProps {
-  darkMode: boolean;
-}
-
 interface DispatchProps {
-  setDarkMode: typeof setDarkMode;
   setIsLoggedIn: typeof setIsLoggedIn;
   setUsername: typeof setUsername;
 }
 
-interface LoginProps extends OwnProps, StateProps, DispatchProps { }
+interface LoginProps extends OwnProps,  DispatchProps { }
 
-const Login: React.FC<LoginProps> = ({setIsLoggedIn, history, darkMode, setDarkMode, setUsername: setUsernameAction}) => {
+const Login: React.FC<LoginProps> = ({setIsLoggedIn, history, setUsername: setUsernameAction}) => {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -51,10 +40,13 @@ const Login: React.FC<LoginProps> = ({setIsLoggedIn, history, darkMode, setDarkM
   };
 
   return (
-    <IonPage id="login-page">
+    <IonPage id="signup-page">
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Login</IonTitle>
+          <IonButtons slot="start">
+            <IonMenuButton></IonMenuButton>
+          </IonButtons>
+          <IonTitle>Signup</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent>
@@ -67,7 +59,10 @@ const Login: React.FC<LoginProps> = ({setIsLoggedIn, history, darkMode, setDarkM
           <IonList>
             <IonItem>
               <IonLabel position="stacked" color="primary">Username</IonLabel>
-              <IonInput name="username" type="text" value={username} spellCheck={false} autocapitalize="off" onIonChange={e => setUsername(e.detail.value!)}
+              <IonInput name="username" type="text" value={username} spellCheck={false} autocapitalize="off" onIonChange={e => {
+                setUsername(e.detail.value!);
+                setUsernameError(false);
+              }}
                 required>
               </IonInput>
             </IonItem>
@@ -80,7 +75,10 @@ const Login: React.FC<LoginProps> = ({setIsLoggedIn, history, darkMode, setDarkM
 
             <IonItem>
               <IonLabel position="stacked" color="primary">Password</IonLabel>
-              <IonInput name="password" type="password" value={password} onIonChange={e => setPassword(e.detail.value!)}>
+              <IonInput name="password" type="password" value={password} onIonChange={e => {
+                setPassword(e.detail.value!);
+                setPasswordError(false);
+              }}>
               </IonInput>
             </IonItem>
 
@@ -93,35 +91,19 @@ const Login: React.FC<LoginProps> = ({setIsLoggedIn, history, darkMode, setDarkM
 
           <IonRow>
             <IonCol>
-              <IonButton type="submit" expand="block">Login</IonButton>
-            </IonCol>
-            <IonCol>
-              <IonButton routerLink="/signup" color="light" expand="block">Signup</IonButton>
+              <IonButton type="submit" expand="block">Create</IonButton>
             </IonCol>
           </IonRow>
         </form>
 
       </IonContent>
 
-      {/*-- Footer without a border --*/}
-      <IonFooter className="ion-no-border">
-        <IonToolbar>
-          <IonTitle>Dark Mode</IonTitle>
-          <IonButtons slot="end">
-            <IonToggle checked={darkMode} onClick={() => setDarkMode(!darkMode)}/>
-          </IonButtons>
-        </IonToolbar>
-      </IonFooter>
     </IonPage>
   );
 };
 
-export default connect<OwnProps, StateProps, DispatchProps>({
-  mapStateToProps: (state) => ({
-    darkMode: state.user.darkMode,
-  }),
+export default connect<OwnProps, {}, DispatchProps>({
   mapDispatchToProps: {
-    setDarkMode,
     setIsLoggedIn,
     setUsername
   },

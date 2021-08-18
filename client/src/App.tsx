@@ -1,32 +1,9 @@
+import React, { useEffect } from 'react';
 import { Route } from 'react-router-dom';
-import { 
-  IonApp,
-  IonMenu,
-  IonToolbar,
-  IonHeader,
-  IonTitle,
-  IonList,
-  IonContent,
-  IonItem,
-  IonIcon,
-  IonLabel,
-  IonRouterOutlet
-} from '@ionic/react';
-import {
-  sunny as sunnyIcon,
-  moon as moonIcon,
-  statsChart as statsChartIcon,
-  pieChart as pieChartIcon,
-  sync as syncIcon,
-  attach as attachIcon
-} from 'ionicons/icons';
+import { IonApp, IonRouterOutlet, IonSplitPane } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import Index from './pages/Index';
-import Login from './pages/Login';
-import Editor from './pages/Editor';
-import ActivityStat from './pages/ActivityStat';
-import TagStat from './pages/TagStat';
-//import ViewMessage from './pages/ViewMessage';
+
+import Menu from './components/Menu';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -47,64 +24,89 @@ import '@ionic/react/css/display.css';
 /* Theme variables */
 import './theme/variables.css';
 
-const App: React.FC = () => (
-  <IonApp>
-    <IonMenu side="start" menuId="main-menu" contentId="router-outlet">
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Menu</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-      <IonContent>
-        <IonList>
-          <IonItem key="menu-item-1">
-            <IonIcon icon={sunnyIcon} slot="start"></IonIcon>
-            <IonLabel>白天模式</IonLabel>
-          </IonItem>
-          <IonItem key="menu-item-2">
-            <IonIcon icon={moonIcon} slot="start"></IonIcon>
-            <IonLabel>夜间模式</IonLabel>
-          </IonItem>
-          <IonItem key="menu-item-3">
-            <IonIcon icon={statsChartIcon} slot="start"></IonIcon>
-            <IonLabel>标签统计</IonLabel>
-          </IonItem>
-          <IonItem key="menu-item-4">
-            <IonIcon icon={pieChartIcon} slot="start"></IonIcon>
-            <IonLabel>时间统计</IonLabel>
-          </IonItem>
-          <IonItem key="menu-item-5">
-            <IonIcon icon={syncIcon} slot="start"></IonIcon>
-            <IonLabel>同步</IonLabel>
-          </IonItem>
-          <IonItem key="menu-item-6">
-            <IonIcon icon={attachIcon} slot="start"></IonIcon>
-            <IonLabel>安装 PWA</IonLabel>
-          </IonItem>
-        </IonList>
-      </IonContent>
-    </IonMenu>
+import { connect } from './data/connect';
+import { AppContextProvider } from './data/AppContext';
+import { loadConfData } from './data/sessions/sessions.actions';
+import { setIsLoggedIn, setUsername, loadUserData } from './data/user/user.actions';
+import About from './pages/About';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import SchedulePage from './pages/SchedulePage';
+import SessionDetail from './pages/SessionDetail';
+import { Schedule } from "./models/Schedule";
+import RedirectToLogin from './components/RedirectToLogin';
+import HomeOrTutorial from './components/HomeOrTutorial';
 
-    <IonReactRouter>
-      <IonRouterOutlet id="router-outlet">
-        <Route path="/" exact={true}>
-          <Index />
-        </Route>
-        <Route path="/login" exact={true}>
-          <Login />
-        </Route>
-        <Route path="/editor" exact={true}>
-          <Editor />
-        </Route>
-        <Route path="/stat/activity" exact={true}>
-          <ActivityStat />
-        </Route>
-        <Route path="/stat/tag" exact={true}>
-          <TagStat />
-        </Route>
-      </IonRouterOutlet>
-    </IonReactRouter>
-  </IonApp>
-);
+const App: React.FC = () => {
+  return (
+    <AppContextProvider>
+      <IonicAppConnected />
+    </AppContextProvider>
+  );
+};
+
+interface StateProps {
+  darkMode: boolean;
+  schedule: Schedule;
+}
+
+interface DispatchProps {
+  loadConfData: typeof loadConfData;
+  loadUserData: typeof loadUserData;
+  setIsLoggedIn: typeof setIsLoggedIn;
+  setUsername: typeof setUsername;
+}
+
+interface IonicAppProps extends StateProps, DispatchProps { }
+
+const IonicApp: React.FC<IonicAppProps> = ({ darkMode, schedule, setIsLoggedIn, setUsername, loadConfData, loadUserData }) => {
+
+  useEffect(() => {
+    loadUserData();
+    loadConfData();
+    // eslint-disable-next-line
+  }, []);
+
+  return (
+    schedule.groups.length === 0 ? (
+      <div></div>
+    ) : (
+        <IonApp className={`${darkMode ? 'dark-theme' : ''}`}>
+          <IonReactRouter>
+            <IonSplitPane contentId="main">
+              <Menu />
+              <IonRouterOutlet id="main">
+                {/*
+                We use IonRoute here to keep the tabs state intact,
+                which makes transitions between tabs and non tab pages smooth
+                */}
+                <Route path="/login" component={Login} />
+                <Route path="/signup" component={Signup} />
+                <Route path="/about" component={About} exact />
+                <Route path="/schedule" component={SchedulePage} exact />
+                <Route path="/tabs/schedule/:id" component={SessionDetail} />
+                <Route path="/logout" render={() => {
+                  return <RedirectToLogin
+                    setIsLoggedIn={setIsLoggedIn}
+                    setUsername={setUsername}
+                  />;
+                }} />
+                <Route path="/" component={HomeOrTutorial} exact />
+              </IonRouterOutlet>
+            </IonSplitPane>
+          </IonReactRouter>
+        </IonApp>
+      )
+  )
+}
 
 export default App;
+
+const IonicAppConnected = connect<{}, StateProps, DispatchProps>({
+  mapStateToProps: (state) => ({
+    darkMode: state.user.darkMode,
+    schedule: state.data.schedule
+  }),
+  mapDispatchToProps: { loadConfData, loadUserData, setIsLoggedIn, setUsername },
+  component: IonicApp
+});

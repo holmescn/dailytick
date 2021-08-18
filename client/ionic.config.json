@@ -1,5 +1,7 @@
 {
-  "name": "dailytick",
-  "integrations": {},
+  "name": "ionic-react-conference-app",
+  "integrations": {
+    "capacitor": {}
+  },
   "type": "react"
 }
